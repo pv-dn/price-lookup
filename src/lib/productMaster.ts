@@ -1,0 +1,197 @@
+import {
+  defaultCategories,
+  guessCategory,
+} from "../constants/productCategories";
+import type { PriceData, Product } from "../types";
+import { getManualCustomers } from "./manualCustomers";
+
+function fallbackCategory(categories: string[]): string {
+  if (categories.includes("その他")) return "その他";
+  return categories[categories.length - 1] ?? "その他";
+}
+
+/** 取込・同期時にジャンル設定と手入力客先を残す */
+export function mergePourVousWithLocal(
+  imported: PriceData,
+  existing: PriceData | null,
+): PriceData {
+  const categories = existing?.categories?.length
+    ? existing.categories
+    : imported.categories;
+  const products = mergeProducts(
+    imported.products,
+    existing?.products ?? null,
+    categories,
+  );
+
+  const base = { ...imported, categories, products };
+
+  if (!existing) return base;
+
+  const manualCustomers = getManualCustomers(existing);
+  if (manualCustomers.length === 0) return base;
+
+  const importedNames = new Set(imported.customers.map((c) => c.name));
+  const keptManual = manualCustomers.filter((c) => !importedNames.has(c.name));
+  const keptIds = new Set(keptManual.map((c) => c.id));
+  const keptPrices = existing.prices.filter((p) => keptIds.has(p.customerId));
+
+  return {
+    ...base,
+    customers: [...imported.customers, ...keptManual],
+    prices: [...imported.prices, ...keptPrices],
+  };
+}
+
+function mergeProducts(
+  imported: Product[],
+  existing: Product[] | null,
+  categories: string[],
+): Product[] {
+  if (!existing?.length) {
+    return imported.map((p) => ({
+      code: p.code,
+      name: p.name,
+      category: normalizeCategory(
+        p.category ?? guessCategory(p.name, categories),
+        categories,
+      ),
+    }));
+  }
+
+  const localMap = new Map(existing.map((p) => [p.code, p]));
+
+  return imported.map((p) => {
+    const local = localMap.get(p.code);
+    const category = local?.category ?? p.category ?? guessCategory(p.name, categories);
+    return {
+      code: p.code,
+      name: p.name,
+      category: normalizeCategory(category, categories),
+    };
+  });
+}
+
+function normalizeCategory(category: string, categories: string[]): string {
+  if (categories.includes(category)) return category;
+  return fallbackCategory(categories);
+}
+
+export function updateProductCategory(
+  data: PriceData,
+  code: string,
+  category: string,
+): PriceData {
+  return {
+    ...data,
+    products: data.products.map((p) =>
+      p.code === code ? { ...p, category } : p,
+    ),
+  };
+}
+
+export function ensureProductCategories(data: PriceData): PriceData {
+  const categories =
+    data.categories?.length > 0 ? data.categories : defaultCategories();
+
+  const products = data.products.map((p) => ({
+    ...p,
+    category: normalizeCategory(
+      p.category ?? guessCategory(p.name, categories),
+      categories,
+    ),
+  }));
+
+  const categoriesChanged =
+    !data.categories?.length ||
+    data.categories.length !== categories.length ||
+    data.categories.some((c, i) => c !== categories[i]);
+
+  const productsChanged = products.some(
+    (p, i) => p.category !== data.products[i]?.category,
+  );
+
+  if (!categoriesChanged && !productsChanged) return data;
+  return { ...data, categories, products };
+}
+
+export function countByCategory(
+  products: Product[],
+  categories: string[],
+): Record<string, number> {
+  const counts = Object.fromEntries(categories.map((c) => [c, 0]));
+
+  for (const p of products) {
+    const cat = normalizeCategory(
+      p.category ?? guessCategory(p.name, categories),
+      categories,
+    );
+    counts[cat] = (counts[cat] ?? 0) + 1;
+  }
+  return counts;
+}
+
+export function addCategory(data: PriceData, name: string): PriceData {
+  const trimmed = name.trim();
+  if (!trimmed) throw new Error("ジャンル名を入力してください");
+  if (data.categories.includes(trimmed)) {
+    throw new Error("同じジャンル名があります");
+  }
+  return { ...data, categories: [...data.categories, trimmed] };
+}
+
+export function renameCategory(
+  data: PriceData,
+  oldName: string,
+  newName: string,
+): PriceData {
+  const trimmed = newName.trim();
+  if (!trimmed) throw new Error("ジャンル名を入力してください");
+  if (!data.categories.includes(oldName)) {
+    throw new Error("ジャンルが見つかりません");
+  }
+  if (trimmed !== oldName && data.categories.includes(trimmed)) {
+    throw new Error("同じジャンル名があります");
+  }
+
+  return {
+    ...data,
+    categories: data.categories.map((c) => (c === oldName ? trimmed : c)),
+    products: data.products.map((p) =>
+      p.category === oldName ? { ...p, category: trimmed } : p,
+    ),
+  };
+}
+
+export function removeCategory(data: PriceData, name: string): PriceData {
+  if (data.categories.length <= 1) {
+    throw new Error("ジャンルは1つ以上必要です");
+  }
+  if (!data.categories.includes(name)) {
+    throw new Error("ジャンルが見つかりません");
+  }
+
+  const nextCategories = data.categories.filter((c) => c !== name);
+  const moveTo = fallbackCategory(nextCategories);
+
+  return {
+    ...data,
+    categories: nextCategories,
+    products: data.products.map((p) =>
+      p.category === name ? { ...p, category: moveTo } : p,
+    ),
+  };
+}
+
+export function moveCategory(
+  data: PriceData,
+  index: number,
+  direction: -1 | 1,
+): PriceData {
+  const next = index + direction;
+  if (next < 0 || next >= data.categories.length) return data;
+
+  const categories = [...data.categories];
+  [categories[index], categories[next]] = [categories[next], categories[index]];
+  return { ...data, categories };
+}
