@@ -94,16 +94,13 @@ export function BasePricesScreen({
       className={`search-screen${isSheet ? " search-screen--sheet" : ""}`}
       fixed={
         <>
-        <header className="screen-header">
-          <p className="label">全客先共通</p>
-          <h1 className="customer-name">基本価格表</h1>
-          <p className="screen-subtitle">
-            {filledCount}件設定中
-          </p>
-        </header>
+        <div className="base-header-row">
+          <div className="base-header-title">
+            <p className="label">全客先共通</p>
+            <h1 className="base-header-name">基本価格表</h1>
+          </div>
 
-        <div className="base-toolbar">
-          <label className={`base-toolbar-excel${busy ? " disabled" : ""}`}>
+          <label className={`base-btn base-btn-excel${busy ? " disabled" : ""}`}>
             Excel
             <input
               ref={excelRef}
@@ -118,7 +115,7 @@ export function BasePricesScreen({
             />
           </label>
 
-          <div className="search-box base-toolbar-search">
+          <div className="search-box base-btn-search">
             <input
               type="search"
               placeholder="検索"
@@ -127,12 +124,12 @@ export function BasePricesScreen({
             />
           </div>
 
-          <div className="view-toggle base-toolbar-toggle" role="tablist" aria-label="表示形式">
+          <div className="base-btn-toggle" role="tablist" aria-label="表示形式">
             <button
               type="button"
               role="tab"
               aria-selected={viewMode === "sheet"}
-              className={`view-toggle-btn${viewMode === "sheet" ? " active" : ""}`}
+              className={`base-toggle-btn${viewMode === "sheet" ? " active" : ""}`}
               onClick={() => setViewMode("sheet")}
             >
               一覧表
@@ -141,25 +138,19 @@ export function BasePricesScreen({
               type="button"
               role="tab"
               aria-selected={viewMode === "list"}
-              className={`view-toggle-btn${viewMode === "list" ? " active" : ""}`}
+              className={`base-toggle-btn${viewMode === "list" ? " active" : ""}`}
               onClick={() => setViewMode("list")}
             >
               リスト
             </button>
           </div>
+
+          <button type="button" className="base-btn base-btn-save" onClick={handleSave}>
+            保存
+          </button>
+
+          <span className="base-count">{filledCount}件</span>
         </div>
-
-        {isSheet && !query.trim() && (
-          <p className="result-count sheet-hint">
-            カテゴリ別（{filtered.length}品目）
-          </p>
-        )}
-
-        {!isSheet && (
-          <p className="result-count">
-            {query.trim() ? `検索結果 ${filtered.length}件` : `全品番 ${products.length}件`}
-          </p>
-        )}
 
         {notice && (
           <div className={`notice ${notice.type === "ok" ? "notice-ok" : "notice-err"}`}>
@@ -168,11 +159,7 @@ export function BasePricesScreen({
         )}
         </>
       }
-      footer={
-        <button type="button" className="btn btn-primary" onClick={handleSave}>
-          基本単価を保存
-        </button>
-      }
+      footer={undefined}
     >
         {viewMode === "sheet" ? (
           <BasePriceSheetView

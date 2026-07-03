@@ -826,57 +826,113 @@
 
 /* --- Base price toolbar (horizontal) --- */
 
-.base-toolbar {
+.base-header-row {
   display: flex;
   align-items: center;
   gap: 6px;
-  margin-bottom: 8px;
+  padding: 4px 0 8px;
+  flex-wrap: wrap;
 }
 
-.base-toolbar-excel {
+.base-header-title {
+  flex: 0 0 auto;
+  margin-right: 4px;
+}
+
+.base-header-title .label {
+  margin-bottom: 0;
+  font-size: 11px;
+}
+
+.base-header-name {
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.base-btn {
   flex: 0 0 auto;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 8px 12px;
-  font-size: 13px;
+  padding: 6px 12px;
+  font-size: 12px;
   font-weight: 600;
-  border-radius: 8px;
-  background: var(--bg);
-  color: var(--text);
-  border: 1px solid var(--border);
+  border-radius: 6px;
+  border: none;
   cursor: pointer;
   white-space: nowrap;
 }
 
-.base-toolbar-excel.disabled {
+.base-btn-excel {
+  background: #e8f5e9;
+  color: #2e7d32;
+  border: 1px solid #a5d6a7;
+}
+
+.base-btn-excel:hover {
+  background: #c8e6c9;
+}
+
+.base-btn-excel.disabled {
   opacity: 0.5;
   pointer-events: none;
 }
 
-.base-toolbar-search {
-  flex: 0 1 120px;
+.base-btn-search {
+  flex: 0 1 100px;
   min-width: 50px;
-  padding: 8px 10px;
+  padding: 6px 8px;
   margin-bottom: 0;
-  border-radius: 8px;
-}
-
-.base-toolbar-search input {
-  font-size: 14px;
-}
-
-.base-toolbar-toggle {
-  flex: 0 0 auto;
-  margin-bottom: 0;
-  padding: 3px;
-  border-radius: 8px;
-}
-
-.base-toolbar-toggle .view-toggle-btn {
-  padding: 6px 10px;
-  font-size: 12px;
   border-radius: 6px;
+}
+
+.base-btn-search input {
+  font-size: 13px;
+}
+
+.base-btn-toggle {
+  flex: 0 0 auto;
+  display: flex;
+  gap: 2px;
+  padding: 2px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+
+.base-toggle-btn {
+  padding: 5px 8px;
+  font-size: 12px;
+  font-weight: 600;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.base-toggle-btn.active {
+  background: var(--surface);
+  color: var(--accent);
+  border: 1px solid var(--border);
+}
+
+.base-btn-save {
+  background: var(--accent);
+  color: #fff;
+}
+
+.base-btn-save:hover {
+  background: var(--accent-hover);
+}
+
+.base-count {
+  flex: 0 0 auto;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-tertiary);
+  white-space: nowrap;
 }
 
 .notice-ok {
