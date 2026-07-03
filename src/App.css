@@ -25,6 +25,58 @@
   align-items: center;
   gap: 6px;
   flex-shrink: 0;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.zoom-controls {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 2px;
+}
+
+.zoom-btn {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--accent);
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.zoom-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.zoom-label {
+  min-width: 44px;
+  padding: 4px 6px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.screen-zoom-wrap {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  width: 100%;
 }
 
 .app-bar-title-btn {
@@ -72,12 +124,55 @@
 
 .app-main {
   flex: 1;
+  min-height: 0;
   overflow-y: auto;
+}
+
+.app-main:has(.screen-scroll-layout) {
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.app-main:has(.screen-scroll-layout) .screen-zoom-wrap {
+  flex: 1;
+  min-height: 0;
 }
 
 .screen {
   padding: 16px;
   padding-bottom: 32px;
+}
+
+.screen-scroll-layout {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  padding-bottom: 0;
+}
+
+.screen-scroll-fixed {
+  flex-shrink: 0;
+}
+
+.screen-scroll-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 16px;
+}
+
+.screen-scroll-footer {
+  flex-shrink: 0;
+  padding: 12px 0 16px;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+}
+
+.manual-load-base {
+  margin-bottom: 8px;
 }
 
 .screen-header {
@@ -716,7 +811,7 @@
   display: flex;
   flex-direction: column;
   gap: 6px;
-  margin-bottom: 80px;
+  margin-bottom: 0;
 }
 
 .manual-price-row {
@@ -776,8 +871,7 @@
 }
 
 .search-screen--sheet {
-  padding: 10px 12px 16px;
-  padding-bottom: 16px;
+  padding: 10px 12px 0;
 }
 
 .screen-header-compact {

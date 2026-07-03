@@ -68,65 +68,69 @@ export function ManualPricesScreen({
   };
 
   return (
-    <div className="screen">
-      <header className="screen-header with-back">
-        <button type="button" className="back-button" onClick={onBack}>
-          ← 戻る
-        </button>
-        <div>
-          <p className="label">手入力の客先</p>
-          <h1 className="customer-name">{customer.name}</h1>
+    <div className="screen screen-scroll-layout">
+      <div className="screen-scroll-fixed">
+        <header className="screen-header with-back">
+          <button type="button" className="back-button" onClick={onBack}>
+            ← 戻る
+          </button>
+          <div>
+            <p className="label">手入力の客先</p>
+            <h1 className="customer-name">{customer.name}</h1>
+          </div>
+        </header>
+
+        <p className="settings-desc">
+          品番は伝票アプリのマスタを使います。単価だけ入力してください（{filledCount}件設定中）
+        </p>
+
+        <div className="search-box">
+          <input
+            type="search"
+            placeholder="品番 or 商品名で検索"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+          />
         </div>
-      </header>
 
-      <p className="settings-desc">
-        品番は伝票アプリのマスタを使います。単価だけ入力してください（{filledCount}件設定中）
-      </p>
-
-      <div className="search-box">
-        <input
-          type="search"
-          placeholder="品番 or 商品名で検索"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-        />
+        {basePrices.length > 0 && (
+          <div className="settings-actions-row manual-load-base">
+            <button
+              type="button"
+              className="btn btn-secondary"
+              onClick={handleLoadFromBase}
+            >
+              基本表の単価を読み込む
+            </button>
+          </div>
+        )}
       </div>
 
-      {basePrices.length > 0 && (
-        <div className="settings-actions-row" style={{ marginBottom: "0.75rem" }}>
-          <button
-            type="button"
-            className="btn btn-secondary"
-            onClick={handleLoadFromBase}
-          >
-            基本表の単価を読み込む
-          </button>
-        </div>
-      )}
+      <div className="screen-scroll-body">
+        <ul className="manual-price-list">
+          {filtered.map((product) => (
+            <li key={product.code} className="manual-price-row">
+              <div className="manual-price-info">
+                <span className="list-item-code">{product.code}</span>
+                <span className="list-item-title">{product.name}</span>
+              </div>
+              <div className="manual-price-input-wrap">
+                <span className="manual-yen">¥</span>
+                <input
+                  type="number"
+                  className="manual-price-input"
+                  inputMode="numeric"
+                  placeholder="—"
+                  value={draft.get(product.code) ?? ""}
+                  onChange={(e) => setPrice(product.code, e.target.value)}
+                />
+              </div>
+            </li>
+          ))}
+        </ul>
+      </div>
 
-      <ul className="manual-price-list">
-        {filtered.map((product) => (
-          <li key={product.code} className="manual-price-row">
-            <div className="manual-price-info">
-              <span className="list-item-code">{product.code}</span>
-              <span className="list-item-title">{product.name}</span>
-            </div>
-            <div className="manual-price-input-wrap">
-              <span className="manual-yen">¥</span>
-              <input
-                type="number"
-                className="manual-price-input"
-                inputMode="numeric"
-                placeholder="—"
-                value={draft.get(product.code) ?? ""}
-                onChange={(e) => setPrice(product.code, e.target.value)}
-              />
-            </div>
-          </li>
-        ))}
-      </ul>
-
-      <div className="actions sticky-actions">
+      <div className="screen-scroll-footer">
         <button type="button" className="btn btn-primary" onClick={handleSave}>
           単価を保存
         </button>

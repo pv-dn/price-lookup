@@ -54,54 +54,58 @@ export function BasePricesScreen({ products, basePrices, onSave, onBack }: Props
   const filledCount = [...draft.values()].filter((v) => v.trim() !== "").length;
 
   return (
-    <div className="screen">
-      <header className="screen-header with-back">
-        <button type="button" className="back-button" onClick={onBack}>
-          ← 戻る
-        </button>
-        <div>
-          <p className="label">全客先共通</p>
-          <h1 className="customer-name">基本価格表</h1>
+    <div className="screen screen-scroll-layout">
+      <div className="screen-scroll-fixed">
+        <header className="screen-header with-back">
+          <button type="button" className="back-button" onClick={onBack}>
+            ← 戻る
+          </button>
+          <div>
+            <p className="label">全客先共通</p>
+            <h1 className="customer-name">基本価格表</h1>
+          </div>
+        </header>
+
+        <p className="settings-desc">
+          ここがたたき台です。品番は伝票マスタを使い、基本単価を入力してください（{filledCount}
+          件設定中）。個別の客先価格はこの表をベースに調整します。
+        </p>
+
+        <div className="search-box">
+          <input
+            type="search"
+            placeholder="品番 or 商品名で検索"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+          />
         </div>
-      </header>
-
-      <p className="settings-desc">
-        ここがたたき台です。品番は伝票マスタを使い、基本単価を入力してください（{filledCount}
-        件設定中）。個別の客先価格はこの表をベースに調整します。
-      </p>
-
-      <div className="search-box">
-        <input
-          type="search"
-          placeholder="品番 or 商品名で検索"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-        />
       </div>
 
-      <ul className="manual-price-list">
-        {filtered.map((product) => (
-          <li key={product.code} className="manual-price-row">
-            <div className="manual-price-info">
-              <span className="list-item-code">{product.code}</span>
-              <span className="list-item-title">{product.name}</span>
-            </div>
-            <div className="manual-price-input-wrap">
-              <span className="manual-yen">¥</span>
-              <input
-                type="number"
-                className="manual-price-input"
-                inputMode="numeric"
-                placeholder="—"
-                value={draft.get(product.code) ?? ""}
-                onChange={(e) => setPrice(product.code, e.target.value)}
-              />
-            </div>
-          </li>
-        ))}
-      </ul>
+      <div className="screen-scroll-body">
+        <ul className="manual-price-list">
+          {filtered.map((product) => (
+            <li key={product.code} className="manual-price-row">
+              <div className="manual-price-info">
+                <span className="list-item-code">{product.code}</span>
+                <span className="list-item-title">{product.name}</span>
+              </div>
+              <div className="manual-price-input-wrap">
+                <span className="manual-yen">¥</span>
+                <input
+                  type="number"
+                  className="manual-price-input"
+                  inputMode="numeric"
+                  placeholder="—"
+                  value={draft.get(product.code) ?? ""}
+                  onChange={(e) => setPrice(product.code, e.target.value)}
+                />
+              </div>
+            </li>
+          ))}
+        </ul>
+      </div>
 
-      <div className="actions sticky-actions">
+      <div className="screen-scroll-footer">
         <button type="button" className="btn btn-primary" onClick={handleSave}>
           基本単価を保存
         </button>

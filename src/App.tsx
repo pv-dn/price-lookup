@@ -1,4 +1,6 @@
 import { useMemo, useState } from "react";
+import { ZoomControls } from "./components/ZoomControls";
+import { useScreenZoom } from "./hooks/useScreenZoom";
 import { usePriceData } from "./hooks/usePriceData";
 import { addManualCustomer, setManualPrices } from "./lib/manualCustomers";
 import { setBasePrices } from "./lib/basePrices";
@@ -24,6 +26,15 @@ function App() {
   const [screen, setScreen] = useState<Screen>("customers");
   const [customerId, setCustomerId] = useState<string | null>(null);
   const [productCode, setProductCode] = useState<string | null>(null);
+  const {
+    zoom,
+    zoomPercent,
+    zoomIn,
+    zoomOut,
+    resetZoom,
+    canZoomIn,
+    canZoomOut,
+  } = useScreenZoom(screen);
 
   const customer = useMemo(
     () => data?.customers.find((c) => c.id === customerId),
@@ -107,6 +118,14 @@ function App() {
           ホワイト事業部価格表
         </button>
         <div className="app-bar-right">
+          <ZoomControls
+            zoomPercent={zoomPercent}
+            onZoomIn={zoomIn}
+            onZoomOut={zoomOut}
+            onReset={resetZoom}
+            canZoomIn={canZoomIn}
+            canZoomOut={canZoomOut}
+          />
           {sourceBadge && (
             <span className="app-bar-badge app-bar-badge-source">{sourceBadge}</span>
           )}
@@ -125,6 +144,7 @@ function App() {
       </div>
 
       <main className="app-main">
+        <div className="screen-zoom-wrap" style={{ zoom }}>
         {screen === "settings" && (
           <SettingsScreen
             data={data}
@@ -211,6 +231,7 @@ function App() {
             onReset={goCustomers}
           />
         )}
+        </div>
       </main>
     </div>
   );
