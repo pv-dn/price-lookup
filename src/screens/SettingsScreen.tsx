@@ -15,8 +15,6 @@ type Props = {
   onApply: (data: PriceData) => void;
   onResetSample: () => void;
   onBack: () => void;
-  onOpenProductMaster: () => void;
-  onOpenBasePrices: () => void;
 };
 
 const SOURCE_LABELS: Record<string, string> = {
@@ -26,7 +24,7 @@ const SOURCE_LABELS: Record<string, string> = {
   excel: "価格表Excel",
 };
 
-export function SettingsScreen({ data, onApply, onResetSample, onBack, onOpenProductMaster, onOpenBasePrices }: Props) {
+export function SettingsScreen({ data, onApply, onResetSample, onBack }: Props) {
   const { user, authReady, login, logout } = useAuth();
   const fileRef = useRef<HTMLInputElement>(null);
   const excelRef = useRef<HTMLInputElement>(null);
@@ -181,26 +179,6 @@ export function SettingsScreen({ data, onApply, onResetSample, onBack, onOpenPro
           )}
         </dl>
       </div>
-
-      <section className="settings-section">
-        <h2 className="settings-title">基本価格表</h2>
-        <p className="settings-desc">
-          全客先共通のたたき台です。ここで基本単価を入力し、手入力の客先ではこの表をベースに調整できます。
-        </p>
-        <button type="button" className="btn btn-secondary" onClick={onOpenBasePrices}>
-          基本価格表を編集
-        </button>
-      </section>
-
-      <section className="settings-section">
-        <h2 className="settings-title">品目マスタ</h2>
-        <p className="settings-desc">
-          ドライ・布団類などのジャンル分けを設定します。一覧表の並びに反映されます。
-        </p>
-        <button type="button" className="btn btn-secondary" onClick={onOpenProductMaster}>
-          品目マスタを編集
-        </button>
-      </section>
 
       <section className="settings-section">
         <h2 className="settings-title">① 価格表Excel取込</h2>

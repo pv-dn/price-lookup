@@ -91,7 +91,7 @@ export function ProductMasterScreen({ data, onUpdate, onBack }: Props) {
         <>
         <div className="pm-header-row">
           <button type="button" className="pm-back" onClick={onBack}>
-            ← 戻る
+            ← 客先へ
           </button>
           <h1 className="pm-title">品目マスタ</h1>
 

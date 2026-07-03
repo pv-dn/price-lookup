@@ -1,4 +1,4 @@
-export type MainTab = "customers" | "base-prices";
+export type MainTab = "customers" | "base-prices" | "edit";
 
 type Props = {
   active: MainTab;
@@ -28,6 +28,14 @@ export function MainTabBar({ active, basePriceCount, onChange }: Props) {
           <span className="app-tab-badge">{basePriceCount}</span>
         )}
       </button>
+      <button
+        type="button"
+        className={`app-tab${active === "edit" ? " active" : ""}`}
+        aria-current={active === "edit" ? "page" : undefined}
+        onClick={() => onChange("edit")}
+      >
+        編集
+      </button>
     </nav>
   );
 }
@@ -37,6 +45,7 @@ function mainTabFromScreen(screen: string): MainTab | null {
     return "customers";
   }
   if (screen === "base-prices") return "base-prices";
+  if (screen === "product-master") return "edit";
   return null;
 }
 

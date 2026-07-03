@@ -124,7 +124,11 @@ function App() {
     }
     setCustomerId(null);
     setProductCode(null);
-    setScreen("base-prices");
+    if (tab === "edit") {
+      setScreen("product-master");
+    } else {
+      setScreen("base-prices");
+    }
   };
 
   const showMainTabs = mainTabFromScreen(screen) !== null;
@@ -211,8 +215,6 @@ function App() {
               goCustomers();
             }}
             onBack={goCustomers}
-            onOpenProductMaster={() => setScreen("product-master")}
-            onOpenBasePrices={() => setScreen("base-prices")}
           />
         )}
 
@@ -243,7 +245,7 @@ function App() {
           <ProductMasterScreen
             data={data}
             onUpdate={applyData}
-            onBack={() => setScreen("settings")}
+            onBack={goCustomers}
           />
         )}
 
