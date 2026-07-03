@@ -209,28 +209,50 @@
 
 .screen-scroll-resize-handle {
   flex-shrink: 0;
-  height: 10px;
-  margin: 2px 0 6px;
+  height: 20px;
+  margin: 4px 0 8px;
+  padding: 0 8px;
   cursor: ns-resize;
   touch-action: none;
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 8px;
   user-select: none;
+  border-radius: 8px;
+  background: var(--bg);
+  border: 1px dashed var(--border);
 }
 
-.screen-scroll-resize-handle::before {
-  content: "";
-  width: 44px;
+.screen-scroll-resize-grip {
+  width: 36px;
   height: 4px;
   border-radius: 999px;
-  background: var(--border);
-  transition: background 0.15s;
+  background: var(--text-tertiary);
+  flex-shrink: 0;
 }
 
-.screen-scroll-resize-handle:hover::before,
-.screen-scroll-resize-handle:active::before {
+.screen-scroll-resize-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-tertiary);
+  white-space: nowrap;
+}
+
+.screen-scroll-resize-handle:hover,
+.screen-scroll-resize-handle:active {
+  border-color: var(--accent);
+  background: var(--info-bg);
+}
+
+.screen-scroll-resize-handle:hover .screen-scroll-resize-grip,
+.screen-scroll-resize-handle:active .screen-scroll-resize-grip {
   background: var(--accent);
+}
+
+.screen-scroll-resize-handle:hover .screen-scroll-resize-label,
+.screen-scroll-resize-handle:active .screen-scroll-resize-label {
+  color: var(--accent);
 }
 
 .screen-scroll-body {
@@ -241,8 +263,41 @@
   padding-bottom: 16px;
 }
 
+.screen-scroll-body--sheet {
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 8px;
+}
+
+.screen-scroll-body--sheet .sheet-grid {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: stretch;
+  overflow-x: auto;
+  overflow-y: hidden;
+  gap: 10px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.screen-scroll-body--sheet .sheet-column {
+  flex: 0 0 168px;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  height: auto;
+  align-self: stretch;
+}
+
 .screen-scroll-body-sized {
   flex: 0 0 auto;
+}
+
+.screen-scroll-spacer {
+  flex: 1;
+  min-height: 0;
 }
 
 .screen-scroll-footer {
@@ -982,6 +1037,15 @@
   border: 1px solid #8b8b8b;
   background: var(--surface);
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.sheet-column-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .sheet-column-title {
@@ -992,6 +1056,7 @@
   font-weight: 700;
   padding: 5px 8px;
   border-bottom: 1px solid #8b8b8b;
+  flex-shrink: 0;
 }
 
 .sheet-table {
@@ -1009,6 +1074,12 @@
   padding: 4px 6px;
   border-bottom: 1px solid #ccc;
   text-align: left;
+}
+
+.sheet-column-scroll .sheet-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
 }
 
 .sheet-table thead th.col-price {

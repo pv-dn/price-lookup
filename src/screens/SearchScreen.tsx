@@ -82,7 +82,8 @@ export function SearchScreen({
 
   return (
     <ScreenScrollLayout
-      paneId="search"
+      paneId={isSheet ? "search-sheet" : "search-list"}
+      bodyVariant={isSheet ? "sheet" : "scroll"}
       className={`search-screen${isSheet ? " search-screen--sheet" : ""}`}
       fixed={
         <>

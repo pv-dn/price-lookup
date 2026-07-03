@@ -1,9 +1,13 @@
 import type { ReactNode } from "react";
-import { useResizableListPane } from "../hooks/useResizableListPane";
+import {
+  useResizableListPane,
+  type ListPaneBodyVariant,
+} from "../hooks/useResizableListPane";
 
 type Props = {
   paneId: string;
   className?: string;
+  bodyVariant?: ListPaneBodyVariant;
   fixed: ReactNode;
   footer?: ReactNode;
   children: ReactNode;
@@ -12,6 +16,7 @@ type Props = {
 export function ScreenScrollLayout({
   paneId,
   className,
+  bodyVariant = "scroll",
   fixed,
   footer,
   children,
@@ -23,8 +28,10 @@ export function ScreenScrollLayout({
     footerRef,
     bodyHeight,
     useCustomHeight,
+    showSpacer,
+    bodyClassName,
     handleProps,
-  } = useResizableListPane(paneId);
+  } = useResizableListPane(paneId, bodyVariant);
 
   const rootClassName = ["screen", "screen-scroll-layout", className]
     .filter(Boolean)
@@ -40,14 +47,17 @@ export function ScreenScrollLayout({
         className="screen-scroll-resize-handle"
         role="separator"
         aria-orientation="horizontal"
-        aria-label="リストの高さを調整"
-        title="ドラッグでリストの高さを変更。ダブルクリックで自動に戻す"
+        aria-label="一覧の高さを調整"
+        title="ドラッグで一覧の高さを変更。ダブルクリックで自動に戻す"
         {...handleProps}
-      />
+      >
+        <span className="screen-scroll-resize-grip" aria-hidden="true" />
+        <span className="screen-scroll-resize-label">ドラッグで高さ調整</span>
+      </div>
 
       <div
         ref={bodyRef}
-        className={`screen-scroll-body${useCustomHeight ? " screen-scroll-body-sized" : ""}`}
+        className={`${bodyClassName}${useCustomHeight ? " screen-scroll-body-sized" : ""}`}
         style={
           useCustomHeight && bodyHeight !== null
             ? { height: bodyHeight, flex: "0 0 auto" }
@@ -56,6 +66,8 @@ export function ScreenScrollLayout({
       >
         {children}
       </div>
+
+      {showSpacer ? <div className="screen-scroll-spacer" aria-hidden="true" /> : null}
 
       {footer ? (
         <div ref={footerRef} className="screen-scroll-footer">

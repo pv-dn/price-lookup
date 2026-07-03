@@ -89,7 +89,8 @@ export function BasePricesScreen({
 
   return (
     <ScreenScrollLayout
-      paneId="base-prices"
+      paneId={isSheet ? "base-prices-sheet" : "base-prices-list"}
+      bodyVariant={isSheet ? "sheet" : "scroll"}
       className={`search-screen${isSheet ? " search-screen--sheet" : ""}`}
       fixed={
         <>

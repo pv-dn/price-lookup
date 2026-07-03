@@ -21,7 +21,8 @@ export function BasePriceSheetView({
       {groups.map((group) => (
         <div key={group.label} className="sheet-column">
           <div className="sheet-column-title">{group.label}</div>
-          <table className="sheet-table">
+          <div className="sheet-column-scroll">
+            <table className="sheet-table">
             <thead>
               <tr>
                 <th>品名</th>
@@ -46,6 +47,7 @@ export function BasePriceSheetView({
               ))}
             </tbody>
           </table>
+          </div>
         </div>
       ))}
     </div>
