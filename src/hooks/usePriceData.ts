@@ -1,12 +1,11 @@
 import { useCallback, useEffect, useState } from "react";
+import samplePrices from "../data/samplePrices.json";
 import type { PriceData } from "../types";
 import { ensureProductCategories } from "../lib/productMaster";
 import { clearStoredData, loadStoredData, saveStoredData } from "../lib/storage";
 
-async function loadSampleData(): Promise<PriceData> {
-  const res = await fetch(`${import.meta.env.BASE_URL}data/prices.json`);
-  if (!res.ok) throw new Error("サンプルデータの読み込みに失敗しました");
-  const json = (await res.json()) as PriceData;
+function loadSampleData(): PriceData {
+  const json = samplePrices as PriceData;
   return {
     ...json,
     meta: { ...json.meta, source: json.meta.source ?? "sample" },
@@ -34,8 +33,7 @@ export function usePriceData() {
         setData(ensureProductCategories(stored));
         return;
       }
-      const sample = await loadSampleData();
-      setData(ensureProductCategories(sample));
+      setData(ensureProductCategories(loadSampleData()));
     } catch (e) {
       setError(e instanceof Error ? e.message : "不明なエラー");
     } finally {
@@ -47,8 +45,7 @@ export function usePriceData() {
     clearStoredData();
     setLoading(true);
     try {
-      const sample = await loadSampleData();
-      setData(sample);
+      setData(ensureProductCategories(loadSampleData()));
       setError(null);
     } catch (e) {
       setError(e instanceof Error ? e.message : "不明なエラー");
