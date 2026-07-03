@@ -828,19 +828,25 @@
 
 .base-toolbar {
   display: flex;
-  align-items: stretch;
+  align-items: center;
   gap: 6px;
   margin-bottom: 8px;
 }
 
 .base-toolbar-excel {
-  flex-shrink: 0;
-  padding: 8px 12px;
-  font-size: 13px;
-  border-radius: 8px;
+  flex: 0 0 auto;
   display: flex;
   align-items: center;
+  justify-content: center;
+  padding: 8px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--text);
+  border: 1px solid var(--border);
   cursor: pointer;
+  white-space: nowrap;
 }
 
 .base-toolbar-excel.disabled {
@@ -849,8 +855,8 @@
 }
 
 .base-toolbar-search {
-  flex: 1;
-  min-width: 0;
+  flex: 1 1 0;
+  min-width: 60px;
   padding: 8px 10px;
   margin-bottom: 0;
   border-radius: 8px;
@@ -861,7 +867,7 @@
 }
 
 .base-toolbar-toggle {
-  flex-shrink: 0;
+  flex: 0 0 auto;
   margin-bottom: 0;
   padding: 3px;
   border-radius: 8px;

@@ -103,7 +103,7 @@ export function BasePricesScreen({
         </header>
 
         <div className="base-toolbar">
-          <label className={`btn btn-secondary base-toolbar-excel${busy ? " disabled" : ""}`}>
+          <label className={`base-toolbar-excel${busy ? " disabled" : ""}`}>
             Excel
             <input
               ref={excelRef}
