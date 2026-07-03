@@ -82,19 +82,10 @@ function findBlocks(headerRow: unknown[]): { nameCol: number; priceCol: number }
   return blocks;
 }
 
-export function parsePriceSheetExcel(
+function extractPriceSheetItems(
   rows: unknown[][],
   categories: string[],
-): ParsedPriceSheet {
-  if (rows.length < 6) {
-    throw new Error("価格表の形式ではありません（行数が足りません）");
-  }
-
-  const customerName = extractCustomerName(rows[1] ?? []);
-  if (!customerName) {
-    throw new Error("2行目に客先名を入力してから取り込んでください");
-  }
-
+): ParsedPriceSheetItem[] {
   const headerIndex = findHeaderRow(rows);
   const blocks = findBlocks(rows[headerIndex] ?? []);
   if (blocks.length === 0) {
@@ -121,6 +112,39 @@ export function parsePriceSheetExcel(
     }
   }
 
+  return items;
+}
+
+export function parseBasePriceSheetExcel(
+  rows: unknown[][],
+  categories: string[],
+): { items: ParsedPriceSheetItem[] } {
+  if (rows.length < 6) {
+    throw new Error("価格表の形式ではありません（行数が足りません）");
+  }
+
+  const items = extractPriceSheetItems(rows, categories);
+  if (items.length === 0) {
+    throw new Error("品名が1件も見つかりませんでした");
+  }
+
+  return { items };
+}
+
+export function parsePriceSheetExcel(
+  rows: unknown[][],
+  categories: string[],
+): ParsedPriceSheet {
+  if (rows.length < 6) {
+    throw new Error("価格表の形式ではありません（行数が足りません）");
+  }
+
+  const customerName = extractCustomerName(rows[1] ?? []);
+  if (!customerName) {
+    throw new Error("2行目に客先名を入力してから取り込んでください");
+  }
+
+  const items = extractPriceSheetItems(rows, categories);
   if (items.length === 0) {
     throw new Error("品名が1件も見つかりませんでした");
   }
@@ -148,4 +172,21 @@ export async function readPriceSheetExcelFile(
     raw: true,
   }) as unknown[][];
   return parsePriceSheetExcel(rows, categories);
+}
+
+export async function readBasePriceSheetExcelFile(
+  file: ArrayBuffer,
+  categories: string[],
+): Promise<{ items: ParsedPriceSheetItem[] }> {
+  const XLSX = await import("xlsx");
+  const workbook = XLSX.read(file, { type: "array", cellDates: true });
+  const sheetName = workbook.SheetNames[0];
+  if (!sheetName) throw new Error("シートが見つかりません");
+  const sheet = workbook.Sheets[sheetName];
+  const rows = XLSX.utils.sheet_to_json(sheet, {
+    header: 1,
+    defval: "",
+    raw: true,
+  }) as unknown[][];
+  return parseBasePriceSheetExcel(rows, categories);
 }

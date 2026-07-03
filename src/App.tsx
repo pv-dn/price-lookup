@@ -6,6 +6,8 @@ import { useScreenZoom } from "./hooks/useScreenZoom";
 import { usePriceData } from "./hooks/usePriceData";
 import { addManualCustomer, setManualPrices } from "./lib/manualCustomers";
 import { setBasePrices } from "./lib/basePrices";
+import { mergeBasePriceSheetExcelResult } from "./lib/mergeBasePriceSheetExcel";
+import { readBasePriceSheetExcelFile } from "./lib/parsePriceSheetExcel";
 import { BasePricesScreen } from "./screens/BasePricesScreen";
 import { CustomerScreen } from "./screens/CustomerScreen";
 import { ManualPricesScreen } from "./screens/ManualPricesScreen";
@@ -180,9 +182,23 @@ function App() {
         {screen === "base-prices" && (
           <BasePricesScreen
             products={data.products}
+            categories={data.categories}
             basePrices={data.basePrices}
             onSave={(entries) => {
               applyData(setBasePrices(data, entries));
+            }}
+            onImportExcel={async (file) => {
+              const buffer = await file.arrayBuffer();
+              const { items } = await readBasePriceSheetExcelFile(
+                buffer,
+                data.categories,
+              );
+              const { data: merged, message } = mergeBasePriceSheetExcelResult(
+                data,
+                items,
+              );
+              applyData(merged);
+              return message;
             }}
           />
         )}
