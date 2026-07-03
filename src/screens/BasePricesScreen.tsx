@@ -6,10 +6,9 @@ type Props = {
   products: Product[];
   basePrices: PriceData["basePrices"];
   onSave: (entries: { code: string; price: number }[]) => void;
-  onBack: () => void;
 };
 
-export function BasePricesScreen({ products, basePrices, onSave, onBack }: Props) {
+export function BasePricesScreen({ products, basePrices, onSave }: Props) {
   const [query, setQuery] = useState("");
 
   const initialMap = useMemo(() => {
@@ -56,14 +55,9 @@ export function BasePricesScreen({ products, basePrices, onSave, onBack }: Props
   return (
     <div className="screen screen-scroll-layout">
       <div className="screen-scroll-fixed">
-        <header className="screen-header with-back">
-          <button type="button" className="back-button" onClick={onBack}>
-            ← 戻る
-          </button>
-          <div>
-            <p className="label">全客先共通</p>
-            <h1 className="customer-name">基本価格表</h1>
-          </div>
+        <header className="screen-header">
+          <p className="label">全客先共通</p>
+          <h1 className="customer-name">基本価格表</h1>
         </header>
 
         <p className="settings-desc">

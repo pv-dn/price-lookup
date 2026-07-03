@@ -1,4 +1,6 @@
 import { useMemo, useState } from "react";
+import { MainTabBar, mainTabFromScreen } from "./components/MainTabBar";
+import type { MainTab } from "./components/MainTabBar";
 import { ZoomControls } from "./components/ZoomControls";
 import { useScreenZoom } from "./hooks/useScreenZoom";
 import { usePriceData } from "./hooks/usePriceData";
@@ -87,6 +89,19 @@ function App() {
     }
   };
 
+  const handleMainTab = (tab: MainTab) => {
+    if (tab === "customers") {
+      goCustomers();
+      return;
+    }
+    setCustomerId(null);
+    setProductCode(null);
+    setScreen("base-prices");
+  };
+
+  const showMainTabs = mainTabFromScreen(screen) !== null;
+  const activeMainTab = mainTabFromScreen(screen) ?? "customers";
+
   if (loading) {
     return (
       <div className="app">
@@ -168,9 +183,7 @@ function App() {
             basePrices={data.basePrices}
             onSave={(entries) => {
               applyData(setBasePrices(data, entries));
-              setScreen("settings");
             }}
-            onBack={() => setScreen("settings")}
           />
         )}
 
@@ -233,6 +246,14 @@ function App() {
         )}
         </div>
       </main>
+
+      {showMainTabs && (
+        <MainTabBar
+          active={activeMainTab}
+          basePriceCount={data.basePrices.length}
+          onChange={handleMainTab}
+        />
+      )}
     </div>
   );
 }
