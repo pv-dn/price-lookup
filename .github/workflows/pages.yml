@@ -3,6 +3,8 @@ name: Deploy GitHub Pages
 on:
   push:
     branches: [main]
+    paths-ignore:
+      - "docs/**"
 
 permissions:
   contents: write
@@ -25,3 +27,4 @@ jobs:
           publish_branch: main
           destination_dir: docs
           keep_files: true
+          commit_message: "deploy: update site [skip ci]"
