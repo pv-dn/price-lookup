@@ -72,156 +72,164 @@ export function ProductMasterScreen({ data, onUpdate, onBack }: Props) {
     : (data.categories[data.categories.length - 1] ?? "その他");
 
   return (
-    <div className="screen product-master-screen">
-      <header className="screen-header with-back">
-        <button type="button" className="back-button" onClick={onBack}>
-          ← 戻る
-        </button>
-        <h1>品目マスタ</h1>
-        <p className="screen-subtitle">
-          品目・ジャンルの追加・編集（伝票取込と併用できます）
-        </p>
-      </header>
+    <div className="screen screen-scroll-layout product-master-screen">
+      <div className="screen-scroll-fixed">
+        <header className="screen-header with-back">
+          <button type="button" className="back-button" onClick={onBack}>
+            ← 戻る
+          </button>
+          <h1>品目マスタ</h1>
+          <p className="screen-subtitle">
+            品目・ジャンルの追加・編集（伝票取込と併用できます）
+          </p>
+        </header>
 
-      <div className="view-toggle master-tabs">
-        <button
-          type="button"
-          className={`view-toggle-btn${tab === "products" ? " active" : ""}`}
-          onClick={() => setTab("products")}
-        >
-          品目
-        </button>
-        <button
-          type="button"
-          className={`view-toggle-btn${tab === "genres" ? " active" : ""}`}
-          onClick={() => setTab("genres")}
-        >
-          ジャンル
-        </button>
-      </div>
+        <div className="view-toggle master-tabs">
+          <button
+            type="button"
+            className={`view-toggle-btn${tab === "products" ? " active" : ""}`}
+            onClick={() => setTab("products")}
+          >
+            品目
+          </button>
+          <button
+            type="button"
+            className={`view-toggle-btn${tab === "genres" ? " active" : ""}`}
+            onClick={() => setTab("genres")}
+          >
+            ジャンル
+          </button>
+        </div>
 
-      {error && <div className="notice notice-err">{error}</div>}
+        {error && <div className="notice notice-err">{error}</div>}
 
-      {tab === "products" && (
-        <>
-          <div className="add-product-box">
-            <input
-              className="settings-input master-field-code"
-              placeholder="品番"
-              value={newCode}
-              onChange={(e) => setNewCode(e.target.value)}
-            />
-            <input
-              className="settings-input master-field-name"
-              placeholder="品名"
-              value={newName}
-              onChange={(e) => setNewName(e.target.value)}
-            />
-            <select
-              className="category-select master-field-category"
-              value={newCategory}
-              onChange={(e) => setNewCategory(e.target.value)}
-            >
-              {data.categories.map((cat) => (
-                <option key={cat} value={cat}>
-                  {cat}
-                </option>
-              ))}
-            </select>
-            <button
-              type="button"
-              className="btn btn-primary"
-              disabled={!newCode.trim() || !newName.trim()}
-              onClick={() => {
-                run(() => addProduct(data, newCode, newName, newCategory));
-                setNewCode("");
-                setNewName("");
-                setNewCategory(defaultCategory);
-              }}
-            >
-              品目を追加
-            </button>
-          </div>
-
-          <div className="category-chips">
-            <button
-              type="button"
-              className={`category-chip${filterCategory === "all" ? " active" : ""}`}
-              onClick={() => setFilterCategory("all")}
-            >
-              すべて ({data.products.length})
-            </button>
-            {data.categories.map((cat) => (
-              <button
-                key={cat}
-                type="button"
-                className={`category-chip${filterCategory === cat ? " active" : ""}`}
-                onClick={() => setFilterCategory(cat)}
+        {tab === "products" && (
+          <>
+            <div className="add-product-box">
+              <input
+                className="settings-input master-field-code"
+                placeholder="品番"
+                value={newCode}
+                onChange={(e) => setNewCode(e.target.value)}
+              />
+              <input
+                className="settings-input master-field-name"
+                placeholder="品名"
+                value={newName}
+                onChange={(e) => setNewName(e.target.value)}
+              />
+              <select
+                className="category-select master-field-category"
+                value={newCategory}
+                onChange={(e) => setNewCategory(e.target.value)}
               >
-                {cat} ({counts[cat] ?? 0})
-              </button>
-            ))}
-          </div>
-
-          <div className="search-box">
-            <input
-              type="search"
-              placeholder="品番 or 品名で検索"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-            />
-          </div>
-
-          <p className="result-count">{filtered.length}件表示</p>
-
-          <div className="master-table-wrap">
-            <table className="master-table">
-              <thead>
-                <tr>
-                  <th>品番</th>
-                  <th>品名</th>
-                  <th>ジャンル</th>
-                  <th aria-label="操作" />
-                </tr>
-              </thead>
-              <tbody>
-                {filtered.map((product) => (
-                  <ProductRow
-                    key={product.code}
-                    product={product}
-                    categories={data.categories}
-                    onUpdate={(updates) =>
-                      run(() => updateProduct(data, product.code, updates))
-                    }
-                    onDelete={() => {
-                      if (
-                        confirm(
-                          `「${product.code} ${product.name}」を削除しますか？\n単価データも消えます。`,
-                        )
-                      ) {
-                        run(() => removeProduct(data, product.code));
-                      }
-                    }}
-                  />
+                {data.categories.map((cat) => (
+                  <option key={cat} value={cat}>
+                    {cat}
+                  </option>
                 ))}
-              </tbody>
-            </table>
-          </div>
+              </select>
+              <button
+                type="button"
+                className="btn btn-primary"
+                disabled={!newCode.trim() || !newName.trim()}
+                onClick={() => {
+                  run(() => addProduct(data, newCode, newName, newCategory));
+                  setNewCode("");
+                  setNewName("");
+                  setNewCategory(defaultCategory);
+                }}
+              >
+                品目を追加
+              </button>
+            </div>
 
-          {filtered.length === 0 && (
-            <p className="settings-desc" style={{ textAlign: "center", marginTop: 24 }}>
-              品目がありません。上のフォームから追加するか、連携画面から伝票データを取込してください。
-            </p>
-          )}
-        </>
-      )}
+            <div className="category-chips">
+              <button
+                type="button"
+                className={`category-chip${filterCategory === "all" ? " active" : ""}`}
+                onClick={() => setFilterCategory("all")}
+              >
+                すべて ({data.products.length})
+              </button>
+              {data.categories.map((cat) => (
+                <button
+                  key={cat}
+                  type="button"
+                  className={`category-chip${filterCategory === cat ? " active" : ""}`}
+                  onClick={() => setFilterCategory(cat)}
+                >
+                  {cat} ({counts[cat] ?? 0})
+                </button>
+              ))}
+            </div>
 
-      {tab === "genres" && (
-        <>
+            <div className="search-box">
+              <input
+                type="search"
+                placeholder="品番 or 品名で検索"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+              />
+            </div>
+
+            <p className="result-count">{filtered.length}件表示</p>
+          </>
+        )}
+
+        {tab === "genres" && (
           <p className="settings-desc">
             ジャンルの名前・並び順を編集します。一覧表の列順に反映されます。
           </p>
+        )}
+      </div>
 
+      <div className="screen-scroll-body">
+        {tab === "products" && (
+          <>
+            <div className="master-table-wrap">
+              <table className="master-table">
+                <thead>
+                  <tr>
+                    <th>品番</th>
+                    <th>品名</th>
+                    <th>ジャンル</th>
+                    <th aria-label="操作" />
+                  </tr>
+                </thead>
+                <tbody>
+                  {filtered.map((product) => (
+                    <ProductRow
+                      key={product.code}
+                      product={product}
+                      categories={data.categories}
+                      onUpdate={(updates) =>
+                        run(() => updateProduct(data, product.code, updates))
+                      }
+                      onDelete={() => {
+                        if (
+                          confirm(
+                            `「${product.code} ${product.name}」を削除しますか？\n単価データも消えます。`,
+                          )
+                        ) {
+                          run(() => removeProduct(data, product.code));
+                        }
+                      }}
+                    />
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {filtered.length === 0 && (
+              <p className="settings-desc master-empty">
+                品目がありません。上のフォームから追加するか、連携画面から伝票データを取込してください。
+              </p>
+            )}
+          </>
+        )}
+
+        {tab === "genres" && (
           <ul className="genre-list">
             {data.categories.map((genre, index) => (
               <li key={genre} className="genre-row">
@@ -313,7 +321,11 @@ export function ProductMasterScreen({ data, onUpdate, onBack }: Props) {
               </li>
             ))}
           </ul>
+        )}
+      </div>
 
+      {tab === "genres" && (
+        <div className="screen-scroll-footer">
           <div className="add-genre-box">
             <input
               className="settings-input"
@@ -333,7 +345,7 @@ export function ProductMasterScreen({ data, onUpdate, onBack }: Props) {
               ジャンルを追加
             </button>
           </div>
-        </>
+        </div>
       )}
     </div>
   );

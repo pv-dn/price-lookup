@@ -1116,7 +1116,12 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
-  margin-bottom: 20px;
+  margin-bottom: 0;
+}
+
+.master-empty {
+  text-align: center;
+  margin-top: 24px;
 }
 
 .genre-row {
@@ -1196,8 +1201,8 @@
   display: flex;
   flex-direction: column;
   gap: 10px;
-  padding-top: 8px;
-  border-top: 1px solid var(--border);
+  padding-top: 0;
+  border-top: none;
 }
 
 .add-product-box {
