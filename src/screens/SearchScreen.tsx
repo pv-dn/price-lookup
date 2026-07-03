@@ -4,6 +4,7 @@ import {
   ProductListView,
   ProductSheetView,
 } from "../components/ProductViews";
+import { ScreenScrollLayout } from "../components/ScreenScrollLayout";
 import { ViewModeToggle } from "../components/ViewModeToggle";
 import { useViewMode } from "../hooks/useViewMode";
 import type { Customer, PriceEntry, Product } from "../types";
@@ -80,8 +81,11 @@ export function SearchScreen({
   const isSheet = viewMode === "sheet";
 
   return (
-    <div className={`screen screen-scroll-layout search-screen${isSheet ? " search-screen--sheet" : ""}`}>
-      <div className="screen-scroll-fixed">
+    <ScreenScrollLayout
+      paneId="search"
+      className={`search-screen${isSheet ? " search-screen--sheet" : ""}`}
+      fixed={
+        <>
         <header className={`screen-header with-back${isSheet ? " screen-header-compact" : ""}`}>
           <button type="button" className="back-button" onClick={onBack}>
             ← 戻る
@@ -127,9 +131,9 @@ export function SearchScreen({
             Excelのようにカテゴリ別に並べています（{filtered.length}品目）
           </p>
         )}
-      </div>
-
-      <div className="screen-scroll-body">
+        </>
+      }
+    >
         {showFrequent && viewMode === "list" && (
           <section className="section">
             <h2 className="section-title">よく出す品番</h2>
@@ -142,7 +146,6 @@ export function SearchScreen({
         )}
 
         <MainView products={filtered} {...viewProps} />
-      </div>
-    </div>
+    </ScreenScrollLayout>
   );
 }

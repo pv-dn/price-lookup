@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { ScreenScrollLayout } from "../components/ScreenScrollLayout";
 import {
   addCategory,
   addProduct,
@@ -72,8 +73,11 @@ export function ProductMasterScreen({ data, onUpdate, onBack }: Props) {
     : (data.categories[data.categories.length - 1] ?? "その他");
 
   return (
-    <div className="screen screen-scroll-layout product-master-screen">
-      <div className="screen-scroll-fixed">
+    <ScreenScrollLayout
+      paneId="product-master"
+      className="product-master-screen"
+      fixed={
+        <>
         <header className="screen-header with-back">
           <button type="button" className="back-button" onClick={onBack}>
             ← 戻る
@@ -182,9 +186,32 @@ export function ProductMasterScreen({ data, onUpdate, onBack }: Props) {
             ジャンルの名前・並び順を編集します。一覧表の列順に反映されます。
           </p>
         )}
-      </div>
-
-      <div className="screen-scroll-body">
+        </>
+      }
+      footer={
+        tab === "genres" ? (
+          <div className="add-genre-box">
+            <input
+              className="settings-input"
+              placeholder="新しいジャンル名"
+              value={newGenre}
+              onChange={(e) => setNewGenre(e.target.value)}
+            />
+            <button
+              type="button"
+              className="btn btn-primary"
+              disabled={!newGenre.trim()}
+              onClick={() => {
+                run(() => addCategory(data, newGenre));
+                setNewGenre("");
+              }}
+            >
+              ジャンルを追加
+            </button>
+          </div>
+        ) : undefined
+      }
+    >
         {tab === "products" && (
           <>
             <div className="master-table-wrap">
@@ -322,32 +349,7 @@ export function ProductMasterScreen({ data, onUpdate, onBack }: Props) {
             ))}
           </ul>
         )}
-      </div>
-
-      {tab === "genres" && (
-        <div className="screen-scroll-footer">
-          <div className="add-genre-box">
-            <input
-              className="settings-input"
-              placeholder="新しいジャンル名"
-              value={newGenre}
-              onChange={(e) => setNewGenre(e.target.value)}
-            />
-            <button
-              type="button"
-              className="btn btn-primary"
-              disabled={!newGenre.trim()}
-              onClick={() => {
-                run(() => addCategory(data, newGenre));
-                setNewGenre("");
-              }}
-            >
-              ジャンルを追加
-            </button>
-          </div>
-        </div>
-      )}
-    </div>
+    </ScreenScrollLayout>
   );
 }
 

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { BasePriceSheetView } from "../components/BasePriceSheetView";
+import { ScreenScrollLayout } from "../components/ScreenScrollLayout";
 import type { PriceData, Product } from "../types";
 import { normalizeQuery } from "../utils/format";
 
@@ -87,10 +88,11 @@ export function BasePricesScreen({
   const isSheet = viewMode === "sheet";
 
   return (
-    <div
-      className={`screen screen-scroll-layout search-screen${isSheet ? " search-screen--sheet" : ""}`}
-    >
-      <div className="screen-scroll-fixed">
+    <ScreenScrollLayout
+      paneId="base-prices"
+      className={`search-screen${isSheet ? " search-screen--sheet" : ""}`}
+      fixed={
+        <>
         <header className="screen-header">
           <p className="label">全客先共通</p>
           <h1 className="customer-name">基本価格表</h1>
@@ -163,9 +165,14 @@ export function BasePricesScreen({
             {notice.text}
           </div>
         )}
-      </div>
-
-      <div className="screen-scroll-body">
+        </>
+      }
+      footer={
+        <button type="button" className="btn btn-primary" onClick={handleSave}>
+          基本単価を保存
+        </button>
+      }
+    >
         {viewMode === "sheet" ? (
           <BasePriceSheetView
             products={filtered}
@@ -196,13 +203,6 @@ export function BasePricesScreen({
             ))}
           </ul>
         )}
-      </div>
-
-      <div className="screen-scroll-footer">
-        <button type="button" className="btn btn-primary" onClick={handleSave}>
-          基本単価を保存
-        </button>
-      </div>
-    </div>
+    </ScreenScrollLayout>
   );
 }

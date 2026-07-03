@@ -207,12 +207,42 @@
   flex-shrink: 0;
 }
 
+.screen-scroll-resize-handle {
+  flex-shrink: 0;
+  height: 10px;
+  margin: 2px 0 6px;
+  cursor: ns-resize;
+  touch-action: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
+}
+
+.screen-scroll-resize-handle::before {
+  content: "";
+  width: 44px;
+  height: 4px;
+  border-radius: 999px;
+  background: var(--border);
+  transition: background 0.15s;
+}
+
+.screen-scroll-resize-handle:hover::before,
+.screen-scroll-resize-handle:active::before {
+  background: var(--accent);
+}
+
 .screen-scroll-body {
   flex: 1;
   min-height: 0;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   padding-bottom: 16px;
+}
+
+.screen-scroll-body-sized {
+  flex: 0 0 auto;
 }
 
 .screen-scroll-footer {

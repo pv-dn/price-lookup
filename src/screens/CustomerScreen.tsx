@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { ScreenScrollLayout } from "../components/ScreenScrollLayout";
 import type { Customer } from "../types";
 import { normalizeQuery } from "../utils/format";
 
@@ -45,8 +46,10 @@ export function CustomerScreen({ customers, onSelect, onAdd }: Props) {
   };
 
   return (
-    <div className="screen screen-scroll-layout">
-      <div className="screen-scroll-fixed">
+    <ScreenScrollLayout
+      paneId="customers"
+      fixed={
+        <>
         <header className="screen-header">
           <h1>客先を選ぶ</h1>
           <p className="screen-subtitle">
@@ -109,9 +112,9 @@ export function CustomerScreen({ customers, onSelect, onAdd }: Props) {
         )}
 
         <p className="result-count">{filtered.length}件表示</p>
-      </div>
-
-      <div className="screen-scroll-body">
+        </>
+      }
+    >
         <ul className="list">
           {filtered.map((customer) => (
             <li key={customer.id}>
@@ -133,7 +136,6 @@ export function CustomerScreen({ customers, onSelect, onAdd }: Props) {
             </li>
           ))}
         </ul>
-      </div>
-    </div>
+    </ScreenScrollLayout>
   );
 }

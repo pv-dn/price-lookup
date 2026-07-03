@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { ScreenScrollLayout } from "../components/ScreenScrollLayout";
 import type { BasePriceEntry, Customer, PriceEntry, Product } from "../types";
 import { normalizeQuery } from "../utils/format";
 
@@ -68,8 +69,10 @@ export function ManualPricesScreen({
   };
 
   return (
-    <div className="screen screen-scroll-layout">
-      <div className="screen-scroll-fixed">
+    <ScreenScrollLayout
+      paneId="manual-prices"
+      fixed={
+        <>
         <header className="screen-header with-back">
           <button type="button" className="back-button" onClick={onBack}>
             ← 戻る
@@ -104,9 +107,14 @@ export function ManualPricesScreen({
             </button>
           </div>
         )}
-      </div>
-
-      <div className="screen-scroll-body">
+        </>
+      }
+      footer={
+        <button type="button" className="btn btn-primary" onClick={handleSave}>
+          単価を保存
+        </button>
+      }
+    >
         <ul className="manual-price-list">
           {filtered.map((product) => (
             <li key={product.code} className="manual-price-row">
@@ -128,13 +136,6 @@ export function ManualPricesScreen({
             </li>
           ))}
         </ul>
-      </div>
-
-      <div className="screen-scroll-footer">
-        <button type="button" className="btn btn-primary" onClick={handleSave}>
-          単価を保存
-        </button>
-      </div>
-    </div>
+    </ScreenScrollLayout>
   );
 }
