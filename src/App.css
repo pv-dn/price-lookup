@@ -855,8 +855,8 @@
 }
 
 .base-toolbar-search {
-  flex: 1 1 0;
-  min-width: 60px;
+  flex: 0 1 120px;
+  min-width: 50px;
   padding: 8px 10px;
   margin-bottom: 0;
   border-radius: 8px;
