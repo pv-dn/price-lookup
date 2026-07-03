@@ -14,6 +14,7 @@ const SOURCE_BADGE: Record<string, string> = {
   sample: "サンプル",
   import: "JSON",
   firestore: "同期",
+  excel: "Excel",
 };
 
 function App() {

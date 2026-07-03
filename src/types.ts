@@ -28,7 +28,19 @@ export type PriceEntry = {
   qtyTiers?: QtyTier[];
 };
 
-export type DataSource = "sample" | "import" | "firestore";
+export type DataSource = "sample" | "import" | "firestore" | "excel";
+
+export type ParsedPriceSheetItem = {
+  name: string;
+  price: number | null;
+};
+
+export type ParsedPriceSheet = {
+  customerName: string;
+  customerCode?: string;
+  effectiveDate?: string;
+  items: ParsedPriceSheetItem[];
+};
 
 export type PriceData = {
   meta: {

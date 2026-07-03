@@ -1,9 +1,13 @@
 import { useRef, useState } from "react";
 import { convertPourVousBackup, validatePourVousBackup } from "../lib/convertPourVous";
+import { mergePriceSheetExcelResult } from "../lib/mergePriceSheetExcel";
 import { getManualCustomers, removeManualCustomer } from "../lib/manualCustomers";
 import { mergePourVousWithLocal } from "../lib/productMaster";
+import { readPriceSheetExcelFile } from "../lib/parsePriceSheetExcel";
 import { loadFromFirestore } from "../lib/pourvousFirestore";
 import { useAuth } from "../hooks/useAuth";
+import { defaultCategories } from "../constants/productCategories";
+import { ensureProductCategories } from "../lib/productMaster";
 import type { PriceData } from "../types";
 
 type Props = {
@@ -18,11 +22,13 @@ const SOURCE_LABELS: Record<string, string> = {
   sample: "サンプルデータ",
   import: "JSON取込",
   firestore: "Firestore同期",
+  excel: "価格表Excel",
 };
 
 export function SettingsScreen({ data, onApply, onResetSample, onBack, onOpenProductMaster }: Props) {
   const { user, authReady, login, logout } = useAuth();
   const fileRef = useRef<HTMLInputElement>(null);
+  const excelRef = useRef<HTMLInputElement>(null);
   const [message, setMessage] = useState<{ text: string; type: "ok" | "err" } | null>(null);
   const [busy, setBusy] = useState(false);
   const [email, setEmail] = useState("");
@@ -54,6 +60,31 @@ export function SettingsScreen({ data, onApply, onResetSample, onBack, onOpenPro
     } finally {
       setBusy(false);
       if (fileRef.current) fileRef.current.value = "";
+    }
+  };
+
+  const handleExcelImport = async (file: File) => {
+    if (!data) {
+      showMsg("データが読み込まれていません", "err");
+      return;
+    }
+    setBusy(true);
+    setMessage(null);
+    try {
+      const buffer = await file.arrayBuffer();
+      const categories = data.categories.length > 0 ? data.categories : defaultCategories();
+      const sheet = await readPriceSheetExcelFile(buffer, categories);
+      const { data: merged, message } = mergePriceSheetExcelResult(
+        ensureProductCategories(data),
+        sheet,
+      );
+      onApply(merged);
+      showMsg(message, "ok");
+    } catch (e) {
+      showMsg(e instanceof Error ? e.message : "Excel取込に失敗しました", "err");
+    } finally {
+      setBusy(false);
+      if (excelRef.current) excelRef.current.value = "";
     }
   };
 
@@ -157,7 +188,28 @@ export function SettingsScreen({ data, onApply, onResetSample, onBack, onOpenPro
       </section>
 
       <section className="settings-section">
-        <h2 className="settings-title">① JSON取込</h2>
+        <h2 className="settings-title">① 価格表Excel取込</h2>
+        <p className="settings-desc">
+          デスクトップの「かかくひょう」ひな型（.xlsx）を選びます。2行目に客先名、5行目以降に品名を書いた表に対応します。単価が空でも品目だけ取り込めます。
+        </p>
+        <label className={`btn btn-secondary file-label${busy ? " disabled" : ""}`}>
+          Excelファイルを選ぶ
+          <input
+            ref={excelRef}
+            type="file"
+            accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            disabled={busy}
+            style={{ display: "none" }}
+            onChange={(e) => {
+              const f = e.target.files?.[0];
+              if (f) handleExcelImport(f);
+            }}
+          />
+        </label>
+      </section>
+
+      <section className="settings-section">
+        <h2 className="settings-title">② 伝票JSON取込</h2>
         <p className="settings-desc">
           伝票アプリの「バックアップをdownload」で保存したJSONを選びます。
         </p>
@@ -178,7 +230,7 @@ export function SettingsScreen({ data, onApply, onResetSample, onBack, onOpenPro
       </section>
 
       <section className="settings-section">
-        <h2 className="settings-title">② Firestore同期</h2>
+        <h2 className="settings-title">③ Firestore同期</h2>
         <p className="settings-desc">
           伝票アプリと同じFirebaseアカウントでログインし、最新データを取得します。
         </p>
