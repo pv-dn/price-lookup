@@ -935,6 +935,41 @@
   white-space: nowrap;
 }
 
+.base-btn-fs {
+  background: #e3f2fd;
+  color: #1565c0;
+  border: 1px solid #90caf9;
+}
+
+.base-btn-fs:hover {
+  background: #bbdefb;
+}
+
+.base-btn-exit-fs {
+  background: #fff3e0;
+  color: #e65100;
+  border: 1px solid #ffcc80;
+}
+
+.base-btn-exit-fs:hover {
+  background: #ffe0b2;
+}
+
+/* Fullscreen overlay */
+.base-fullscreen {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  max-width: 100% !important;
+  max-height: 100dvh !important;
+  height: 100dvh !important;
+  margin: 0 !important;
+  border: none !important;
+  border-radius: 0 !important;
+  background: var(--surface);
+  padding: 8px 12px 0;
+}
+
 .notice-ok {
   background: #e8f5e9;
   color: #2e7d32;

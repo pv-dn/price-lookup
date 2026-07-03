@@ -25,6 +25,7 @@ export function BasePricesScreen({
   const [viewMode, setViewMode] = useState<ViewMode>("sheet");
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState<{ text: string; type: "ok" | "err" } | null>(null);
+  const [fullscreen, setFullscreen] = useState(false);
   const excelRef = useRef<HTMLInputElement>(null);
 
   const [draft, setDraft] = useState<Map<string, string>>(() => new Map());
@@ -91,14 +92,16 @@ export function BasePricesScreen({
     <ScreenScrollLayout
       paneId={isSheet ? "base-prices-sheet" : "base-prices-list"}
       bodyVariant={isSheet ? "sheet" : "scroll"}
-      className={`search-screen${isSheet ? " search-screen--sheet" : ""}`}
+      className={`search-screen${isSheet ? " search-screen--sheet" : ""}${fullscreen ? " base-fullscreen" : ""}`}
       fixed={
         <>
         <div className="base-header-row">
-          <div className="base-header-title">
-            <p className="label">全客先共通</p>
-            <h1 className="base-header-name">基本価格表</h1>
-          </div>
+          {!fullscreen && (
+            <div className="base-header-title">
+              <p className="label">全客先共通</p>
+              <h1 className="base-header-name">基本価格表</h1>
+            </div>
+          )}
 
           <label className={`base-btn base-btn-excel${busy ? " disabled" : ""}`}>
             Excel
@@ -147,6 +150,15 @@ export function BasePricesScreen({
 
           <button type="button" className="base-btn base-btn-save" onClick={handleSave}>
             保存
+          </button>
+
+          <button
+            type="button"
+            className={`base-btn ${fullscreen ? "base-btn-exit-fs" : "base-btn-fs"}`}
+            onClick={() => setFullscreen((f) => !f)}
+            title={fullscreen ? "通常表示に戻す" : "全画面表示"}
+          >
+            {fullscreen ? "戻る" : "全画面"}
           </button>
 
           <span className="base-count">{filledCount}件</span>
