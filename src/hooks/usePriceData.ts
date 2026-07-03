@@ -4,7 +4,7 @@ import { ensureProductCategories } from "../lib/productMaster";
 import { clearStoredData, loadStoredData, saveStoredData } from "../lib/storage";
 
 async function loadSampleData(): Promise<PriceData> {
-  const res = await fetch("/data/prices.json");
+  const res = await fetch(`${import.meta.env.BASE_URL}data/prices.json`);
   if (!res.ok) throw new Error("サンプルデータの読み込みに失敗しました");
   const json = (await res.json()) as PriceData;
   return {
