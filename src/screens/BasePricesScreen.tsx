@@ -1,34 +1,52 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { BasePriceSheetView } from "../components/BasePriceSheetView";
 import { ScreenScrollLayout } from "../components/ScreenScrollLayout";
-import type { PriceData, Product } from "../types";
+import {
+  addCategory,
+  addProduct,
+  moveCategory,
+  removeCategory,
+  removeProduct,
+  renameCategory,
+  updateProduct,
+} from "../lib/productMaster";
+import type { PriceData } from "../types";
 import { normalizeQuery } from "../utils/format";
 
 type ViewMode = "list" | "sheet";
 
 type Props = {
-  products: Product[];
-  categories: string[];
-  basePrices: PriceData["basePrices"];
+  data: PriceData;
+  onUpdate: (data: PriceData) => void;
   onSave: (entries: { code: string; price: number }[]) => void;
   onImportExcel: (file: File) => Promise<string>;
 };
 
 export function BasePricesScreen({
-  products,
-  categories,
-  basePrices,
+  data,
+  onUpdate,
   onSave,
   onImportExcel,
 }: Props) {
+  const { products, categories, basePrices } = data;
+
   const [query, setQuery] = useState("");
   const [viewMode, setViewMode] = useState<ViewMode>("sheet");
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState<{ text: string; type: "ok" | "err" } | null>(null);
   const [fullscreen, setFullscreen] = useState(false);
+  const [showEditor, setShowEditor] = useState(false);
   const excelRef = useRef<HTMLInputElement>(null);
 
   const [draft, setDraft] = useState<Map<string, string>>(() => new Map());
+
+  const [newCode, setNewCode] = useState("");
+  const [newName, setNewName] = useState("");
+  const [newCategory, setNewCategory] = useState(() => categories[0] ?? "その他");
+  const [newGenre, setNewGenre] = useState("");
+  const [editingGenre, setEditingGenre] = useState<string | null>(null);
+  const [editingGenreName, setEditingGenreName] = useState("");
+  const [editorError, setEditorError] = useState<string | null>(null);
 
   useEffect(() => {
     const m = new Map<string, string>();
@@ -84,6 +102,34 @@ export function BasePricesScreen({
       if (excelRef.current) excelRef.current.value = "";
     }
   };
+
+  const run = (fn: () => PriceData) => {
+    setEditorError(null);
+    try {
+      onUpdate(fn());
+    } catch (e) {
+      setEditorError(e instanceof Error ? e.message : "操作できませんでした");
+    }
+  };
+
+  const handleEditProduct = (code: string, updates: { name?: string; category?: string }) => {
+    setEditorError(null);
+    try {
+      onUpdate(updateProduct(data, code, updates));
+    } catch (e) {
+      setEditorError(e instanceof Error ? e.message : "操作できませんでした");
+    }
+  };
+
+  const handleDeleteProduct = (code: string, name: string) => {
+    if (confirm(`「${code} ${name}」を削除しますか？\n単価データも消えます。`)) {
+      run(() => removeProduct(data, code));
+    }
+  };
+
+  const defaultCategory = categories.includes("その他")
+    ? "その他"
+    : (categories[categories.length - 1] ?? "その他");
 
   const filledCount = [...draft.values()].filter((v) => v.trim() !== "").length;
   const isSheet = viewMode === "sheet";
@@ -154,6 +200,15 @@ export function BasePricesScreen({
 
           <button
             type="button"
+            className={`base-btn ${showEditor ? "base-btn-editor-active" : "base-btn-editor"}`}
+            onClick={() => setShowEditor((s) => !s)}
+            title="品目・ジャンルの追加・編集"
+          >
+            {showEditor ? "閉じる" : "＋品目"}
+          </button>
+
+          <button
+            type="button"
             className={`base-btn ${fullscreen ? "base-btn-exit-fs" : "base-btn-fs"}`}
             onClick={() => setFullscreen((f) => !f)}
             title={fullscreen ? "通常表示に戻す" : "全画面表示"}
@@ -163,6 +218,154 @@ export function BasePricesScreen({
 
           <span className="base-count">{filledCount}件</span>
         </div>
+
+        {showEditor && (
+          <div className="base-editor-panel">
+            {editorError && <div className="notice notice-err">{editorError}</div>}
+
+            <div className="base-editor-section">
+              <h3 className="base-editor-heading">品目を追加</h3>
+              <div className="base-editor-add-row">
+                <input
+                  className="base-editor-input"
+                  placeholder="品番"
+                  value={newCode}
+                  onChange={(e) => setNewCode(e.target.value)}
+                />
+                <input
+                  className="base-editor-input base-editor-input-name"
+                  placeholder="品名"
+                  value={newName}
+                  onChange={(e) => setNewName(e.target.value)}
+                />
+                <select
+                  className="base-editor-select"
+                  value={newCategory}
+                  onChange={(e) => setNewCategory(e.target.value)}
+                >
+                  {categories.map((cat) => (
+                    <option key={cat} value={cat}>{cat}</option>
+                  ))}
+                </select>
+                <button
+                  type="button"
+                  className="base-btn base-btn-save"
+                  disabled={!newCode.trim() || !newName.trim()}
+                  onClick={() => {
+                    run(() => addProduct(data, newCode, newName, newCategory));
+                    setNewCode("");
+                    setNewName("");
+                    setNewCategory(defaultCategory);
+                  }}
+                >
+                  追加
+                </button>
+              </div>
+            </div>
+
+            <div className="base-editor-section">
+              <h3 className="base-editor-heading">ジャンル</h3>
+              <div className="base-editor-genres">
+                {categories.map((genre, index) => (
+                  <div key={genre} className="base-editor-genre-row">
+                    {editingGenre === genre ? (
+                      <>
+                        <input
+                          className="base-editor-input"
+                          value={editingGenreName}
+                          onChange={(e) => setEditingGenreName(e.target.value)}
+                          autoFocus
+                        />
+                        <button
+                          type="button"
+                          className="base-editor-genre-btn"
+                          onClick={() => {
+                            run(() => renameCategory(data, genre, editingGenreName));
+                            setEditingGenre(null);
+                          }}
+                        >
+                          OK
+                        </button>
+                        <button
+                          type="button"
+                          className="base-editor-genre-btn"
+                          onClick={() => setEditingGenre(null)}
+                        >
+                          取消
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <span className="base-editor-genre-name">{genre}</span>
+                        <button
+                          type="button"
+                          className="base-editor-genre-btn"
+                          onClick={() => {
+                            setEditingGenre(genre);
+                            setEditingGenreName(genre);
+                          }}
+                          title="名前変更"
+                        >
+                          変更
+                        </button>
+                        <button
+                          type="button"
+                          className="base-editor-genre-btn"
+                          disabled={index === 0}
+                          onClick={() => run(() => moveCategory(data, index, -1))}
+                          title="上に移動"
+                        >
+                          ↑
+                        </button>
+                        <button
+                          type="button"
+                          className="base-editor-genre-btn"
+                          disabled={index === categories.length - 1}
+                          onClick={() => run(() => moveCategory(data, index, 1))}
+                          title="下に移動"
+                        >
+                          ↓
+                        </button>
+                        <button
+                          type="button"
+                          className="base-editor-genre-btn base-editor-genre-btn-danger"
+                          disabled={categories.length <= 1}
+                          onClick={() => {
+                            if (confirm(`「${genre}」を削除しますか？\n品目は別ジャンルに移されます。`)) {
+                              run(() => removeCategory(data, genre));
+                            }
+                          }}
+                          title="削除"
+                        >
+                          ×
+                        </button>
+                      </>
+                    )}
+                  </div>
+                ))}
+                <div className="base-editor-add-row">
+                  <input
+                    className="base-editor-input"
+                    placeholder="新しいジャンル名"
+                    value={newGenre}
+                    onChange={(e) => setNewGenre(e.target.value)}
+                  />
+                  <button
+                    type="button"
+                    className="base-btn base-btn-save"
+                    disabled={!newGenre.trim()}
+                    onClick={() => {
+                      run(() => addCategory(data, newGenre));
+                      setNewGenre("");
+                    }}
+                  >
+                    追加
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {notice && (
           <div className={`notice ${notice.type === "ok" ? "notice-ok" : "notice-err"}`}>
@@ -179,6 +382,8 @@ export function BasePricesScreen({
             categories={categories}
             draft={draft}
             onSetPrice={setPrice}
+            onEditProduct={handleEditProduct}
+            onDeleteProduct={handleDeleteProduct}
           />
         ) : (
           <ul className="manual-price-list">
@@ -186,7 +391,10 @@ export function BasePricesScreen({
               <li key={product.code} className="manual-price-row">
                 <div className="manual-price-info">
                   <span className="list-item-code">{product.code}</span>
-                  <span className="list-item-title">{product.name}</span>
+                  <EditableProductName
+                    name={product.name}
+                    onSave={(name) => handleEditProduct(product.code, { name })}
+                  />
                 </div>
                 <div className="manual-price-input-wrap">
                   <span className="manual-yen">¥</span>
@@ -199,10 +407,70 @@ export function BasePricesScreen({
                     onChange={(e) => setPrice(product.code, e.target.value)}
                   />
                 </div>
+                <button
+                  type="button"
+                  className="base-inline-delete"
+                  onClick={() => handleDeleteProduct(product.code, product.name)}
+                  title="削除"
+                >
+                  ×
+                </button>
               </li>
             ))}
           </ul>
         )}
     </ScreenScrollLayout>
+  );
+}
+
+function EditableProductName({
+  name,
+  onSave,
+}: {
+  name: string;
+  onSave: (name: string) => void;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [value, setValue] = useState(name);
+
+  useEffect(() => {
+    setValue(name);
+  }, [name]);
+
+  if (!editing) {
+    return (
+      <span
+        className="list-item-title base-editable-name"
+        onClick={() => setEditing(true)}
+        title="クリックで品名を編集"
+      >
+        {name}
+      </span>
+    );
+  }
+
+  return (
+    <input
+      className="base-inline-name-input"
+      value={value}
+      onChange={(e) => setValue(e.target.value)}
+      onBlur={() => {
+        if (value.trim() && value.trim() !== name) {
+          onSave(value.trim());
+        } else {
+          setValue(name);
+        }
+        setEditing(false);
+      }}
+      onKeyDown={(e) => {
+        if (e.key === "Enter") {
+          (e.target as HTMLInputElement).blur();
+        } else if (e.key === "Escape") {
+          setValue(name);
+          setEditing(false);
+        }
+      }}
+      autoFocus
+    />
   );
 }

@@ -955,6 +955,182 @@
   background: #ffe0b2;
 }
 
+/* Editor panel */
+.base-btn-editor {
+  background: #f3e5f5;
+  color: #7b1fa2;
+  border: 1px solid #ce93d8;
+}
+
+.base-btn-editor:hover {
+  background: #e1bee7;
+}
+
+.base-btn-editor-active {
+  background: #7b1fa2;
+  color: #fff;
+  border: 1px solid #7b1fa2;
+}
+
+.base-editor-panel {
+  background: #faf5ff;
+  border: 1px solid #ce93d8;
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-bottom: 8px;
+}
+
+.base-editor-section {
+  margin-bottom: 8px;
+}
+
+.base-editor-section:last-child {
+  margin-bottom: 0;
+}
+
+.base-editor-heading {
+  font-size: 12px;
+  font-weight: 700;
+  color: #7b1fa2;
+  margin: 0 0 6px;
+}
+
+.base-editor-add-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.base-editor-input {
+  padding: 5px 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 13px;
+  background: var(--surface);
+  min-width: 60px;
+}
+
+.base-editor-input-name {
+  flex: 1;
+  min-width: 80px;
+}
+
+.base-editor-select {
+  padding: 5px 6px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 12px;
+  background: var(--surface);
+}
+
+.base-editor-genres {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.base-editor-genre-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.base-editor-genre-name {
+  flex: 1;
+  font-size: 13px;
+  font-weight: 500;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.base-editor-genre-btn {
+  flex-shrink: 0;
+  padding: 3px 6px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--surface);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.base-editor-genre-btn:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+.base-editor-genre-btn-danger {
+  color: var(--error);
+  border-color: var(--error);
+}
+
+/* Inline edit in sheets & lists */
+.base-editable-name {
+  cursor: pointer;
+  border-bottom: 1px dashed var(--text-tertiary);
+}
+
+.base-editable-name:hover {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
+
+.base-inline-name-input {
+  width: 100%;
+  padding: 4px 6px;
+  border: 1px solid var(--accent);
+  border-radius: 4px;
+  font-size: 14px;
+  background: var(--surface);
+  outline: none;
+}
+
+.base-inline-name-input-sm {
+  font-size: 12px;
+  padding: 2px 4px;
+}
+
+.base-inline-delete {
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--text-tertiary);
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.base-inline-delete:hover {
+  background: #ffebee;
+  color: var(--error);
+}
+
+.base-inline-delete-sm {
+  border: none;
+  background: transparent;
+  color: var(--text-tertiary);
+  font-size: 12px;
+  cursor: pointer;
+  padding: 1px 4px;
+}
+
+.base-inline-delete-sm:hover {
+  color: var(--error);
+}
+
+.col-delete {
+  width: 24px;
+}
+
 /* Fullscreen overlay */
 .base-fullscreen {
   position: fixed;

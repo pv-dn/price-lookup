@@ -218,9 +218,8 @@ function App() {
 
         {screen === "base-prices" && (
           <BasePricesScreen
-            products={data.products}
-            categories={data.categories}
-            basePrices={data.basePrices}
+            data={data}
+            onUpdate={applyData}
             onSave={(entries) => {
               applyData(setBasePrices(data, entries));
             }}
