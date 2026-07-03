@@ -1533,8 +1533,177 @@
 }
 
 .product-master-screen {
-  max-width: 720px;
+  max-width: 100%;
   margin: 0 auto;
+}
+
+.pm-fullscreen {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  max-width: 100% !important;
+  max-height: 100dvh !important;
+  height: 100dvh !important;
+  margin: 0 !important;
+  border: none !important;
+  border-radius: 0 !important;
+  background: var(--surface);
+  padding: 8px 16px 0;
+}
+
+.pm-header-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0 6px;
+}
+
+.pm-back {
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  color: var(--accent);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 4px 0;
+}
+
+.pm-title {
+  font-size: 16px;
+  font-weight: 700;
+  flex-shrink: 0;
+  margin-right: 8px;
+}
+
+.pm-tab-toggle {
+  display: flex;
+  gap: 2px;
+  padding: 2px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.pm-tab-btn {
+  padding: 6px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.pm-tab-btn.active {
+  background: var(--accent);
+  color: #fff;
+}
+
+.pm-tab-btn-genre.active {
+  background: #7b1fa2;
+}
+
+.pm-product-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 0;
+  flex-wrap: wrap;
+}
+
+.pm-input {
+  padding: 6px 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 13px;
+  background: var(--surface);
+}
+
+.pm-input-code {
+  width: 70px;
+  flex-shrink: 0;
+}
+
+.pm-input-name {
+  flex: 0 1 120px;
+  min-width: 60px;
+}
+
+.pm-select {
+  padding: 6px 6px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 12px;
+  background: var(--surface);
+  max-width: 100px;
+}
+
+.pm-search {
+  flex: 0 1 90px;
+  min-width: 50px;
+  padding: 6px 8px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+
+.pm-search input {
+  width: 100%;
+  font-size: 13px;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: var(--text);
+}
+
+.pm-search input::placeholder {
+  color: var(--text-tertiary);
+}
+
+.pm-filter-chips {
+  display: flex;
+  gap: 3px;
+  flex-wrap: wrap;
+}
+
+.pm-chip {
+  padding: 4px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--bg);
+  color: var(--text-secondary);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.pm-chip.active {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+
+.pm-count {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-tertiary);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.pm-genre-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 0;
+}
+
+.pm-genre-hint {
+  font-size: 11px;
+  color: var(--text-tertiary);
 }
 
 .master-tabs {

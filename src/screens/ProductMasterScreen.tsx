@@ -86,142 +86,132 @@ export function ProductMasterScreen({ data, onUpdate, onBack }: Props) {
   return (
     <ScreenScrollLayout
       paneId="product-master"
-      className="product-master-screen"
+      className="product-master-screen pm-fullscreen"
       fixed={
         <>
-        <header className="screen-header with-back">
-          <button type="button" className="back-button" onClick={onBack}>
+        <div className="pm-header-row">
+          <button type="button" className="pm-back" onClick={onBack}>
             ← 戻る
           </button>
-          <h1>品目マスタ</h1>
-          <p className="screen-subtitle">
-            品目・ジャンルの追加・編集（伝票取込と併用できます）
-          </p>
-        </header>
+          <h1 className="pm-title">品目マスタ</h1>
 
-        <div className="view-toggle master-tabs">
-          <button
-            type="button"
-            className={`view-toggle-btn${tab === "products" ? " active" : ""}`}
-            onClick={() => setTab("products")}
-          >
-            品目
-          </button>
-          <button
-            type="button"
-            className={`view-toggle-btn${tab === "genres" ? " active" : ""}`}
-            onClick={() => setTab("genres")}
-          >
-            ジャンル
-          </button>
+          <div className="pm-tab-toggle">
+            <button
+              type="button"
+              className={`pm-tab-btn${tab === "products" ? " active" : ""}`}
+              onClick={() => setTab("products")}
+            >
+              品目（{data.products.length}）
+            </button>
+            <button
+              type="button"
+              className={`pm-tab-btn pm-tab-btn-genre${tab === "genres" ? " active" : ""}`}
+              onClick={() => setTab("genres")}
+            >
+              ジャンル（{data.categories.length}）
+            </button>
+          </div>
         </div>
 
         {error && <div className="notice notice-err">{error}</div>}
 
         {tab === "products" && (
-          <>
-            <div className="add-product-box">
-              <input
-                className="settings-input master-field-code"
-                placeholder="品番"
-                value={newCode}
-                onChange={(e) => setNewCode(e.target.value)}
-              />
-              <input
-                className="settings-input master-field-name"
-                placeholder="品名"
-                value={newName}
-                onChange={(e) => setNewName(e.target.value)}
-              />
-              <select
-                className="category-select master-field-category"
-                value={newCategory}
-                onChange={(e) => setNewCategory(e.target.value)}
-              >
-                {data.categories.map((cat) => (
-                  <option key={cat} value={cat}>
-                    {cat}
-                  </option>
-                ))}
-              </select>
-              <button
-                type="button"
-                className="btn btn-primary"
-                disabled={!newCode.trim() || !newName.trim()}
-                onClick={() => {
-                  run(() => addProduct(data, newCode, newName, newCategory));
-                  setNewCode("");
-                  setNewName("");
-                  setNewCategory(defaultCategory);
-                }}
-              >
-                品目を追加
-              </button>
-            </div>
-
-            <div className="category-chips">
-              <button
-                type="button"
-                className={`category-chip${filterCategory === "all" ? " active" : ""}`}
-                onClick={() => setFilterCategory("all")}
-              >
-                すべて ({data.products.length})
-              </button>
+          <div className="pm-product-toolbar">
+            <input
+              className="pm-input pm-input-code"
+              placeholder="品番"
+              value={newCode}
+              onChange={(e) => setNewCode(e.target.value)}
+            />
+            <input
+              className="pm-input pm-input-name"
+              placeholder="品名"
+              value={newName}
+              onChange={(e) => setNewName(e.target.value)}
+            />
+            <select
+              className="pm-select"
+              value={newCategory}
+              onChange={(e) => setNewCategory(e.target.value)}
+            >
               {data.categories.map((cat) => (
-                <button
-                  key={cat}
-                  type="button"
-                  className={`category-chip${filterCategory === cat ? " active" : ""}`}
-                  onClick={() => setFilterCategory(cat)}
-                >
-                  {cat} ({counts[cat] ?? 0})
-                </button>
+                <option key={cat} value={cat}>{cat}</option>
               ))}
-            </div>
+            </select>
+            <button
+              type="button"
+              className="base-btn base-btn-save"
+              disabled={!newCode.trim() || !newName.trim()}
+              onClick={() => {
+                run(() => addProduct(data, newCode, newName, newCategory));
+                setNewCode("");
+                setNewName("");
+                setNewCategory(defaultCategory);
+              }}
+            >
+              追加
+            </button>
 
-            <div className="search-box">
+            <div className="pm-search">
               <input
                 type="search"
-                placeholder="品番 or 品名で検索"
+                placeholder="検索"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
               />
             </div>
 
-            <p className="result-count">{filtered.length}件表示</p>
-          </>
+            <div className="pm-filter-chips">
+              <button
+                type="button"
+                className={`pm-chip${filterCategory === "all" ? " active" : ""}`}
+                onClick={() => setFilterCategory("all")}
+              >
+                全て
+              </button>
+              {data.categories.map((cat) => (
+                <button
+                  key={cat}
+                  type="button"
+                  className={`pm-chip${filterCategory === cat ? " active" : ""}`}
+                  onClick={() => setFilterCategory(cat)}
+                >
+                  {cat}({counts[cat] ?? 0})
+                </button>
+              ))}
+            </div>
+
+            <span className="pm-count">{filtered.length}件</span>
+          </div>
         )}
 
         {tab === "genres" && (
-          <p className="settings-desc">
-            ジャンルの名前・並び順を編集します。一覧表の列順に反映されます。
-          </p>
-        )}
-        </>
-      }
-      footer={
-        tab === "genres" ? (
-          <div className="add-genre-box">
+          <div className="pm-genre-toolbar">
             <input
-              className="settings-input"
+              className="pm-input"
               placeholder="新しいジャンル名"
               value={newGenre}
               onChange={(e) => setNewGenre(e.target.value)}
             />
             <button
               type="button"
-              className="btn btn-primary"
+              className="base-btn base-btn-save"
               disabled={!newGenre.trim()}
               onClick={() => {
                 run(() => addCategory(data, newGenre));
                 setNewGenre("");
               }}
             >
-              ジャンルを追加
+              追加
             </button>
+            <span className="pm-genre-hint">
+              並び順は一覧表の列順に反映されます
+            </span>
           </div>
-        ) : undefined
+        )}
+        </>
       }
+      footer={undefined}
     >
         {tab === "products" && (
           <>
