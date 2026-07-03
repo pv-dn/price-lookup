@@ -97,61 +97,61 @@ export function BasePricesScreen({
         <header className="screen-header">
           <p className="label">全客先共通</p>
           <h1 className="customer-name">基本価格表</h1>
+          <p className="screen-subtitle">
+            {filledCount}件設定中
+          </p>
         </header>
 
-        <p className="settings-desc">
-          「かかくひょう」ひな型（.xlsx）の読み込みと編集ができます（{filledCount}
-          件設定中）。個別の客先価格はこの表をベースに調整します。
-        </p>
+        <div className="base-toolbar">
+          <label className={`btn btn-secondary base-toolbar-excel${busy ? " disabled" : ""}`}>
+            Excel
+            <input
+              ref={excelRef}
+              type="file"
+              accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+              disabled={busy}
+              style={{ display: "none" }}
+              onChange={(e) => {
+                const f = e.target.files?.[0];
+                if (f) void handleExcelImport(f);
+              }}
+            />
+          </label>
 
-        <label className={`btn btn-secondary file-label${busy ? " disabled" : ""}`}>
-          Excelから読み込む
-          <input
-            ref={excelRef}
-            type="file"
-            accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-            disabled={busy}
-            style={{ display: "none" }}
-            onChange={(e) => {
-              const f = e.target.files?.[0];
-              if (f) void handleExcelImport(f);
-            }}
-          />
-        </label>
+          <div className="search-box base-toolbar-search">
+            <input
+              type="search"
+              placeholder="検索"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+            />
+          </div>
 
-        <div className="search-box">
-          <input
-            type="search"
-            placeholder="品番 or 商品名で検索"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-          />
-        </div>
-
-        <div className="view-toggle" role="tablist" aria-label="表示形式">
-          <button
-            type="button"
-            role="tab"
-            aria-selected={viewMode === "sheet"}
-            className={`view-toggle-btn${viewMode === "sheet" ? " active" : ""}`}
-            onClick={() => setViewMode("sheet")}
-          >
-            一覧表
-          </button>
-          <button
-            type="button"
-            role="tab"
-            aria-selected={viewMode === "list"}
-            className={`view-toggle-btn${viewMode === "list" ? " active" : ""}`}
-            onClick={() => setViewMode("list")}
-          >
-            リスト
-          </button>
+          <div className="view-toggle base-toolbar-toggle" role="tablist" aria-label="表示形式">
+            <button
+              type="button"
+              role="tab"
+              aria-selected={viewMode === "sheet"}
+              className={`view-toggle-btn${viewMode === "sheet" ? " active" : ""}`}
+              onClick={() => setViewMode("sheet")}
+            >
+              一覧表
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={viewMode === "list"}
+              className={`view-toggle-btn${viewMode === "list" ? " active" : ""}`}
+              onClick={() => setViewMode("list")}
+            >
+              リスト
+            </button>
+          </div>
         </div>
 
         {isSheet && !query.trim() && (
           <p className="result-count sheet-hint">
-            Excelのようにカテゴリ別に並べています（{filtered.length}品目）
+            カテゴリ別（{filtered.length}品目）
           </p>
         )}
 
