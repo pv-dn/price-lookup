@@ -171,7 +171,8 @@ function App() {
       </div>
 
       <main className="app-main">
-        <div className="screen-zoom-wrap" style={{ zoom }}>
+        <div className="screen-zoom-wrap">
+        <div className="screen-zoom-inner" style={{ zoom }}>
         {screen === "settings" && (
           <SettingsScreen
             data={data}
@@ -270,6 +271,7 @@ function App() {
             onReset={goCustomers}
           />
         )}
+        </div>
         </div>
       </main>
     </div>
