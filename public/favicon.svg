@@ -1,12 +1,49 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <rect width="512" height="512" rx="108" fill="#0071e3"/>
-  <text
-    x="256"
-    y="340"
-    text-anchor="middle"
-    font-family="'Segoe UI', 'Hiragino Sans', 'Noto Sans JP', sans-serif"
-    font-size="280"
-    font-weight="700"
+  <defs>
+    <linearGradient id="bg" x1="18%" y1="8%" x2="88%" y2="96%">
+      <stop offset="0%" stop-color="#1e4fd6"/>
+      <stop offset="52%" stop-color="#0a5cff"/>
+      <stop offset="100%" stop-color="#053a8c"/>
+    </linearGradient>
+    <linearGradient id="shine" x1="50%" y1="0%" x2="50%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.34"/>
+      <stop offset="45%" stop-color="#ffffff" stop-opacity="0.06"/>
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="yen" x1="50%" y1="0%" x2="50%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="100%" stop-color="#dce8ff"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="10" stdDeviation="12" flood-color="#021433" flood-opacity="0.45"/>
+    </filter>
+    <filter id="glow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="6" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <rect width="512" height="512" rx="116" fill="url(#bg)"/>
+  <rect width="512" height="512" rx="116" fill="url(#shine)"/>
+  <circle cx="256" cy="268" r="168" fill="none" stroke="#ffffff" stroke-opacity="0.12" stroke-width="6"/>
+  <circle cx="256" cy="268" r="132" fill="none" stroke="#7eb4ff" stroke-opacity="0.18" stroke-width="3"/>
+
+  <g filter="url(#shadow)">
+    <path
+      fill="url(#yen)"
+      d="M256 118 L150 262 L188 262 L256 186 L324 262 L362 262 Z"
+    />
+    <rect x="232" y="186" width="48" height="156" rx="10" fill="url(#yen)"/>
+    <rect x="164" y="300" width="184" height="34" rx="12" fill="url(#yen)"/>
+    <rect x="164" y="360" width="184" height="34" rx="12" fill="url(#yen)"/>
+  </g>
+
+  <path
     fill="#ffffff"
-  >¥</text>
+    fill-opacity="0.55"
+    d="M256 118 L188 262 L206 262 L256 202 L306 262 L324 262 Z"
+  />
 </svg>
