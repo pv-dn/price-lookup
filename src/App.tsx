@@ -126,38 +126,48 @@ function App() {
 
   return (
     <div className="app">
-      <div className="app-bar">
-        <button
-          type="button"
-          className="app-bar-title-btn"
-          onClick={goCustomers}
-        >
-          ホワイト事業部価格表
-        </button>
-        <div className="app-bar-right">
-          <ZoomControls
-            zoomPercent={zoomPercent}
-            onZoomIn={zoomIn}
-            onZoomOut={zoomOut}
-            onReset={resetZoom}
-            canZoomIn={canZoomIn}
-            canZoomOut={canZoomOut}
-          />
-          {sourceBadge && (
-            <span className="app-bar-badge app-bar-badge-source">{sourceBadge}</span>
-          )}
-          {data.meta.revisionName && (
-            <span className="app-bar-badge">{data.meta.revisionName}</span>
-          )}
+      <div className="app-header">
+        <div className="app-bar">
           <button
             type="button"
-            className="app-bar-settings"
-            onClick={() => setScreen("settings")}
-            aria-label="データ連携設定"
+            className="app-bar-title-btn"
+            onClick={goCustomers}
           >
-            連携
+            ホワイト事業部価格表
           </button>
+          <div className="app-bar-right">
+            <ZoomControls
+              zoomPercent={zoomPercent}
+              onZoomIn={zoomIn}
+              onZoomOut={zoomOut}
+              onReset={resetZoom}
+              canZoomIn={canZoomIn}
+              canZoomOut={canZoomOut}
+            />
+            {sourceBadge && (
+              <span className="app-bar-badge app-bar-badge-source">{sourceBadge}</span>
+            )}
+            {data.meta.revisionName && (
+              <span className="app-bar-badge">{data.meta.revisionName}</span>
+            )}
+            <button
+              type="button"
+              className="app-bar-settings"
+              onClick={() => setScreen("settings")}
+              aria-label="データ連携設定"
+            >
+              連携
+            </button>
+          </div>
         </div>
+
+        {showMainTabs && (
+          <MainTabBar
+            active={activeMainTab}
+            basePriceCount={data.basePrices.length}
+            onChange={handleMainTab}
+          />
+        )}
       </div>
 
       <main className="app-main">
@@ -262,14 +272,6 @@ function App() {
         )}
         </div>
       </main>
-
-      {showMainTabs && (
-        <MainTabBar
-          active={activeMainTab}
-          basePriceCount={data.basePrices.length}
-          onChange={handleMainTab}
-        />
-      )}
     </div>
   );
 }
