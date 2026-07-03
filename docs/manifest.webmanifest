@@ -1,7 +1,7 @@
 {
-  "name": "価格参照",
-  "short_name": "価格参照",
-  "description": "プゥル・ヴー 客先別価格参照アプリ",
+  "name": "ホワイト事業部価格表",
+  "short_name": "ホワイト事業部価格表",
+  "description": "プゥル・ヴー ホワイト事業部 客先別価格表",
   "start_url": "./",
   "display": "standalone",
   "background_color": "#f5f5f7",
