@@ -1200,6 +1200,48 @@
   border-top: 1px solid var(--border);
 }
 
+.add-product-box {
+  display: grid;
+  grid-template-columns: 88px 1fr;
+  gap: 8px;
+  margin-bottom: 16px;
+  padding: 12px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+
+.add-product-box .btn-primary {
+  grid-column: 1 / -1;
+}
+
+.master-field-code {
+  min-width: 0;
+}
+
+.master-field-name {
+  min-width: 0;
+}
+
+.master-field-category {
+  grid-column: 1 / -1;
+}
+
+.master-field-input {
+  width: 100%;
+  padding: 6px 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 13px;
+  background: var(--surface);
+}
+
+.master-actions {
+  width: 56px;
+  text-align: right;
+  white-space: nowrap;
+}
+
 @media (min-width: 600px) {
   .sheet-grid {
     grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));

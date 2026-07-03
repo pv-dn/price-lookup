@@ -1,11 +1,13 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   addCategory,
+  addProduct,
   countByCategory,
   moveCategory,
   removeCategory,
+  removeProduct,
   renameCategory,
-  updateProductCategory,
+  updateProduct,
 } from "../lib/productMaster";
 import type { PriceData } from "../types";
 import { normalizeQuery } from "../utils/format";
@@ -23,6 +25,11 @@ export function ProductMasterScreen({ data, onUpdate, onBack }: Props) {
   const [query, setQuery] = useState("");
   const [filterCategory, setFilterCategory] = useState<string | "all">("all");
   const [newGenre, setNewGenre] = useState("");
+  const [newCode, setNewCode] = useState("");
+  const [newName, setNewName] = useState("");
+  const [newCategory, setNewCategory] = useState(
+    () => data.categories[0] ?? "その他",
+  );
   const [editingGenre, setEditingGenre] = useState<string | null>(null);
   const [editingName, setEditingName] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -60,6 +67,10 @@ export function ProductMasterScreen({ data, onUpdate, onBack }: Props) {
     }
   };
 
+  const defaultCategory = data.categories.includes("その他")
+    ? "その他"
+    : (data.categories[data.categories.length - 1] ?? "その他");
+
   return (
     <div className="screen product-master-screen">
       <header className="screen-header with-back">
@@ -68,7 +79,7 @@ export function ProductMasterScreen({ data, onUpdate, onBack }: Props) {
         </button>
         <h1>品目マスタ</h1>
         <p className="screen-subtitle">
-          品番・品名は伝票から取込。ジャンルはここで編集
+          品目・ジャンルの追加・編集（伝票取込と併用できます）
         </p>
       </header>
 
@@ -93,6 +104,45 @@ export function ProductMasterScreen({ data, onUpdate, onBack }: Props) {
 
       {tab === "products" && (
         <>
+          <div className="add-product-box">
+            <input
+              className="settings-input master-field-code"
+              placeholder="品番"
+              value={newCode}
+              onChange={(e) => setNewCode(e.target.value)}
+            />
+            <input
+              className="settings-input master-field-name"
+              placeholder="品名"
+              value={newName}
+              onChange={(e) => setNewName(e.target.value)}
+            />
+            <select
+              className="category-select master-field-category"
+              value={newCategory}
+              onChange={(e) => setNewCategory(e.target.value)}
+            >
+              {data.categories.map((cat) => (
+                <option key={cat} value={cat}>
+                  {cat}
+                </option>
+              ))}
+            </select>
+            <button
+              type="button"
+              className="btn btn-primary"
+              disabled={!newCode.trim() || !newName.trim()}
+              onClick={() => {
+                run(() => addProduct(data, newCode, newName, newCategory));
+                setNewCode("");
+                setNewName("");
+                setNewCategory(defaultCategory);
+              }}
+            >
+              品目を追加
+            </button>
+          </div>
+
           <div className="category-chips">
             <button
               type="button"
@@ -131,35 +181,28 @@ export function ProductMasterScreen({ data, onUpdate, onBack }: Props) {
                   <th>品番</th>
                   <th>品名</th>
                   <th>ジャンル</th>
+                  <th aria-label="操作" />
                 </tr>
               </thead>
               <tbody>
                 {filtered.map((product) => (
-                  <tr key={product.code}>
-                    <td className="master-code">{product.code}</td>
-                    <td className="master-name">{product.name}</td>
-                    <td className="master-category">
-                      <select
-                        className="category-select"
-                        value={product.category}
-                        onChange={(e) =>
-                          run(() =>
-                            updateProductCategory(
-                              data,
-                              product.code,
-                              e.target.value,
-                            ),
-                          )
-                        }
-                      >
-                        {data.categories.map((cat) => (
-                          <option key={cat} value={cat}>
-                            {cat}
-                          </option>
-                        ))}
-                      </select>
-                    </td>
-                  </tr>
+                  <ProductRow
+                    key={product.code}
+                    product={product}
+                    categories={data.categories}
+                    onUpdate={(updates) =>
+                      run(() => updateProduct(data, product.code, updates))
+                    }
+                    onDelete={() => {
+                      if (
+                        confirm(
+                          `「${product.code} ${product.name}」を削除しますか？\n単価データも消えます。`,
+                        )
+                      ) {
+                        run(() => removeProduct(data, product.code));
+                      }
+                    }}
+                  />
                 ))}
               </tbody>
             </table>
@@ -167,7 +210,7 @@ export function ProductMasterScreen({ data, onUpdate, onBack }: Props) {
 
           {filtered.length === 0 && (
             <p className="settings-desc" style={{ textAlign: "center", marginTop: 24 }}>
-              品目がありません。連携画面から伝票データを取込してください。
+              品目がありません。上のフォームから追加するか、連携画面から伝票データを取込してください。
             </p>
           )}
         </>
@@ -293,5 +336,74 @@ export function ProductMasterScreen({ data, onUpdate, onBack }: Props) {
         </>
       )}
     </div>
+  );
+}
+
+type ProductRowProps = {
+  product: PriceData["products"][number];
+  categories: string[];
+  onUpdate: (updates: { name?: string; category?: string; code?: string }) => void;
+  onDelete: () => void;
+};
+
+function ProductRow({ product, categories, onUpdate, onDelete }: ProductRowProps) {
+  const [code, setCode] = useState(product.code);
+  const [name, setName] = useState(product.name);
+  const [category, setCategory] = useState(product.category);
+
+  useEffect(() => {
+    setCode(product.code);
+    setName(product.name);
+    setCategory(product.category);
+  }, [product.code, product.name, product.category]);
+
+  const saveIfChanged = () => {
+    const updates: { name?: string; category?: string; code?: string } = {};
+    if (name.trim() !== product.name) updates.name = name;
+    if (category !== product.category) updates.category = category;
+    if (code.trim() !== product.code) updates.code = code;
+    if (Object.keys(updates).length > 0) onUpdate(updates);
+  };
+
+  return (
+    <tr>
+      <td className="master-code">
+        <input
+          className="master-field-input"
+          value={code}
+          onChange={(e) => setCode(e.target.value)}
+          onBlur={saveIfChanged}
+        />
+      </td>
+      <td className="master-name">
+        <input
+          className="master-field-input"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          onBlur={saveIfChanged}
+        />
+      </td>
+      <td className="master-category">
+        <select
+          className="category-select"
+          value={category}
+          onChange={(e) => {
+            setCategory(e.target.value);
+            onUpdate({ category: e.target.value });
+          }}
+        >
+          {categories.map((cat) => (
+            <option key={cat} value={cat}>
+              {cat}
+            </option>
+          ))}
+        </select>
+      </td>
+      <td className="master-actions">
+        <button type="button" className="btn-delete-small" onClick={onDelete}>
+          削除
+        </button>
+      </td>
+    </tr>
   );
 }

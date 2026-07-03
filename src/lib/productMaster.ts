@@ -90,8 +90,124 @@ export function updateProductCategory(
   return {
     ...data,
     products: data.products.map((p) =>
-      p.code === code ? { ...p, category } : p,
+      p.code === code ? { ...p, category: normalizeCategory(category, data.categories) } : p,
     ),
+  };
+}
+
+function today(): string {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function replaceProductCode(
+  data: PriceData,
+  oldCode: string,
+  newCode: string,
+): PriceData {
+  return {
+    ...data,
+    products: data.products.map((p) =>
+      p.code === oldCode ? { ...p, code: newCode } : p,
+    ),
+    prices: data.prices.map((p) =>
+      p.code === oldCode ? { ...p, code: newCode } : p,
+    ),
+    basePrices: data.basePrices.map((p) =>
+      p.code === oldCode ? { ...p, code: newCode } : p,
+    ),
+    customers: data.customers.map((c) => ({
+      ...c,
+      frequentCodes: c.frequentCodes.map((fc) => (fc === oldCode ? newCode : fc)),
+    })),
+  };
+}
+
+export function addProduct(
+  data: PriceData,
+  code: string,
+  name: string,
+  category: string,
+): PriceData {
+  const trimmedCode = code.trim();
+  const trimmedName = name.trim();
+  if (!trimmedCode) throw new Error("品番を入力してください");
+  if (!trimmedName) throw new Error("品名を入力してください");
+  if (data.products.some((p) => p.code === trimmedCode)) {
+    throw new Error("同じ品番があります");
+  }
+
+  return {
+    ...data,
+    products: [
+      ...data.products,
+      {
+        code: trimmedCode,
+        name: trimmedName,
+        category: normalizeCategory(category, data.categories),
+      },
+    ],
+    meta: { ...data.meta, updatedAt: today() },
+  };
+}
+
+export function updateProduct(
+  data: PriceData,
+  code: string,
+  updates: { name?: string; category?: string; code?: string },
+): PriceData {
+  if (!data.products.some((p) => p.code === code)) {
+    throw new Error("品目が見つかりません");
+  }
+
+  let next = data;
+
+  if (updates.name !== undefined) {
+    const trimmedName = updates.name.trim();
+    if (!trimmedName) throw new Error("品名を入力してください");
+    next = {
+      ...next,
+      products: next.products.map((p) =>
+        p.code === code ? { ...p, name: trimmedName } : p,
+      ),
+    };
+  }
+
+  if (updates.category !== undefined) {
+    next = updateProductCategory(next, code, updates.category);
+  }
+
+  if (updates.code !== undefined) {
+    const trimmedCode = updates.code.trim();
+    if (!trimmedCode) throw new Error("品番を入力してください");
+    if (trimmedCode !== code) {
+      if (next.products.some((p) => p.code === trimmedCode)) {
+        throw new Error("同じ品番があります");
+      }
+      next = replaceProductCode(next, code, trimmedCode);
+    }
+  }
+
+  return {
+    ...next,
+    meta: { ...next.meta, updatedAt: today() },
+  };
+}
+
+export function removeProduct(data: PriceData, code: string): PriceData {
+  if (!data.products.some((p) => p.code === code)) {
+    throw new Error("品目が見つかりません");
+  }
+
+  return {
+    ...data,
+    products: data.products.filter((p) => p.code !== code),
+    prices: data.prices.filter((p) => p.code !== code),
+    basePrices: data.basePrices.filter((p) => p.code !== code),
+    customers: data.customers.map((c) => ({
+      ...c,
+      frequentCodes: c.frequentCodes.filter((fc) => fc !== code),
+    })),
+    meta: { ...data.meta, updatedAt: today() },
   };
 }
 
