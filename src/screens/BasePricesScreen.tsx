@@ -228,7 +228,7 @@ export function BasePricesScreen({
               <div className="base-editor-add-row">
                 <input
                   className="base-editor-input"
-                  placeholder="品番"
+                  placeholder="品番（空欄で自動）"
                   value={newCode}
                   onChange={(e) => setNewCode(e.target.value)}
                 />
@@ -250,7 +250,7 @@ export function BasePricesScreen({
                 <button
                   type="button"
                   className="base-btn base-btn-save"
-                  disabled={!newCode.trim() || !newName.trim()}
+                  disabled={!newName.trim()}
                   onClick={() => {
                     run(() => addProduct(data, newCode, newName, newCategory));
                     setNewCode("");

@@ -122,16 +122,25 @@ function replaceProductCode(
   };
 }
 
+function generateAutoCode(existingProducts: PriceData["products"]): string {
+  const existing = new Set(existingProducts.map((p) => p.code));
+  for (let i = 1; i <= 9999; i++) {
+    const candidate = `M${String(i).padStart(3, "0")}`;
+    if (!existing.has(candidate)) return candidate;
+  }
+  throw new Error("自動採番の上限に達しました");
+}
+
 export function addProduct(
   data: PriceData,
   code: string,
   name: string,
   category: string,
 ): PriceData {
-  const trimmedCode = code.trim();
   const trimmedName = name.trim();
-  if (!trimmedCode) throw new Error("品番を入力してください");
   if (!trimmedName) throw new Error("品名を入力してください");
+
+  const trimmedCode = code.trim() || generateAutoCode(data.products);
   if (data.products.some((p) => p.code === trimmedCode)) {
     throw new Error("同じ品番があります");
   }

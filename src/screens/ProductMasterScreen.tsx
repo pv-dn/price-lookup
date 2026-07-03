@@ -119,7 +119,7 @@ export function ProductMasterScreen({ data, onUpdate, onBack }: Props) {
           <div className="pm-product-toolbar">
             <input
               className="pm-input pm-input-code"
-              placeholder="品番"
+              placeholder="品番（空欄で自動）"
               value={newCode}
               onChange={(e) => setNewCode(e.target.value)}
             />
@@ -141,7 +141,7 @@ export function ProductMasterScreen({ data, onUpdate, onBack }: Props) {
             <button
               type="button"
               className="base-btn base-btn-save"
-              disabled={!newCode.trim() || !newName.trim()}
+              disabled={!newName.trim()}
               onClick={() => {
                 run(() => addProduct(data, newCode, newName, newCategory));
                 setNewCode("");
