@@ -102,7 +102,7 @@ function App() {
           className="app-bar-title-btn"
           onClick={goCustomers}
         >
-          価格参照
+          ホワイト事業部価格表
         </button>
         <div className="app-bar-right">
           {sourceBadge && (

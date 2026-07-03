@@ -1,6 +1,6 @@
-# 価格参照 — デスクトップショートカット（¥アイコン）
+# ホワイト事業部価格表 — デスクトップショートカット（¥アイコン）
 $ErrorActionPreference = 'Stop'
-$AppName = [char]0x4FA1 + [char]0x683C + [char]0x53C2 + [char]0x7167
+$AppName = 'ホワイト事業部価格表'
 $AppUrl = 'https://pv-dn.github.io/price-lookup/'
 $IconPath = Join-Path $PSScriptRoot 'public\icons\desktop.ico'
 
