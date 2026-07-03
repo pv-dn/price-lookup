@@ -63,6 +63,13 @@ export function SearchScreen({
 
   const showFrequent = !query.trim() && frequentProducts.length > 0;
 
+  const listProducts = useMemo(() => {
+    if (viewMode === "list" && showFrequent) {
+      return filtered.filter((p) => !frequentCodes.has(p.code));
+    }
+    return filtered;
+  }, [filtered, viewMode, showFrequent, frequentCodes]);
+
   const viewProps = {
     customerId: customer.id,
     prices,
@@ -146,7 +153,7 @@ export function SearchScreen({
           </section>
         )}
 
-        <MainView products={filtered} {...viewProps} />
+        <MainView products={listProducts} {...viewProps} />
     </ScreenScrollLayout>
   );
 }

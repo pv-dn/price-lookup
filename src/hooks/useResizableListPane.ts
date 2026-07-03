@@ -1,16 +1,25 @@
 import {
   useCallback,
   useEffect,
+  useLayoutEffect,
   useRef,
   useState,
+  type KeyboardEvent as ReactKeyboardEvent,
   type PointerEvent as ReactPointerEvent,
 } from "react";
 
 const STORAGE_PREFIX = "price-lookup-list-pane-";
 export const LIST_PANE_HANDLE_HEIGHT = 20;
 const MIN_BODY_PX = 120;
+const RATIO_MIN = 0.2;
+const RATIO_MAX = 0.95;
+const KEYBOARD_STEP_PX = 16;
 
 export type ListPaneBodyVariant = "scroll" | "sheet";
+
+function clampRatio(value: number): number {
+  return Math.min(RATIO_MAX, Math.max(RATIO_MIN, value));
+}
 
 function loadRatio(paneId: string): number | null {
   try {
@@ -18,7 +27,7 @@ function loadRatio(paneId: string): number | null {
     if (!raw) return null;
     const n = parseFloat(raw);
     if (Number.isNaN(n)) return null;
-    return Math.min(0.95, Math.max(0.2, n));
+    return clampRatio(n);
   } catch {
     return null;
   }
@@ -30,7 +39,7 @@ function saveRatio(paneId: string, ratio: number | null): void {
       localStorage.removeItem(`${STORAGE_PREFIX}${paneId}`);
       return;
     }
-    localStorage.setItem(`${STORAGE_PREFIX}${paneId}`, String(ratio));
+    localStorage.setItem(`${STORAGE_PREFIX}${paneId}`, String(clampRatio(ratio)));
   } catch {
     /* localStorage unavailable */
   }
@@ -39,6 +48,7 @@ function saveRatio(paneId: string, ratio: number | null): void {
 export function useResizableListPane(
   paneId: string,
   bodyVariant: ListPaneBodyVariant = "scroll",
+  hasFooter = false,
 ) {
   const containerRef = useRef<HTMLDivElement>(null);
   const fixedRef = useRef<HTMLDivElement>(null);
@@ -56,10 +66,14 @@ export function useResizableListPane(
     const fixed = fixedRef.current;
     if (!container || !fixed) return null;
 
-    const footerHeight = footerRef.current?.offsetHeight ?? 0;
+    const containerRect = container.getBoundingClientRect();
+    const fixedRect = fixed.getBoundingClientRect();
+    const footerRect = footerRef.current?.getBoundingClientRect();
+    const footerHeight = footerRect?.height ?? 0;
+
     const flexArea =
-      container.clientHeight -
-      fixed.offsetHeight -
+      containerRect.height -
+      fixedRect.height -
       footerHeight -
       LIST_PANE_HANDLE_HEIGHT;
 
@@ -69,6 +83,21 @@ export function useResizableListPane(
     };
   }, []);
 
+  const applyHeight = useCallback(
+    (nextHeight: number, measured: { flexArea: number; maxBody: number }) => {
+      const clampedHeight = Math.round(
+        Math.max(MIN_BODY_PX, Math.min(measured.maxBody, nextHeight)),
+      );
+      const nextRatio = clampRatio(clampedHeight / measured.flexArea);
+
+      ratioRef.current = nextRatio;
+      setRatio(nextRatio);
+      setBodyHeight(clampedHeight);
+      setShowSpacer(clampedHeight < measured.maxBody - 1);
+    },
+    [],
+  );
+
   const applyRatio = useCallback(() => {
     const measured = measure();
     if (!measured || ratioRef.current === null) {
@@ -77,16 +106,8 @@ export function useResizableListPane(
       return;
     }
 
-    const nextHeight = Math.round(
-      Math.max(
-        MIN_BODY_PX,
-        Math.min(measured.maxBody, ratioRef.current * measured.flexArea),
-      ),
-    );
-
-    setBodyHeight(nextHeight);
-    setShowSpacer(nextHeight < measured.maxBody - 1);
-  }, [measure]);
+    applyHeight(ratioRef.current * measured.flexArea, measured);
+  }, [applyHeight, measure]);
 
   useEffect(() => {
     ratioRef.current = loadRatio(paneId);
@@ -95,9 +116,9 @@ export function useResizableListPane(
 
   useEffect(() => {
     applyRatio();
-  }, [applyRatio, ratio, bodyVariant]);
+  }, [applyRatio, ratio, bodyVariant, hasFooter]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const observer = new ResizeObserver(() => applyRatio());
     const container = containerRef.current;
     const fixed = fixedRef.current;
@@ -107,8 +128,10 @@ export function useResizableListPane(
     if (fixed) observer.observe(fixed);
     if (footer) observer.observe(footer);
 
+    applyRatio();
+
     return () => observer.disconnect();
-  }, [applyRatio]);
+  }, [applyRatio, hasFooter]);
 
   const onPointerDown = useCallback(
     (event: ReactPointerEvent<HTMLDivElement>) => {
@@ -118,9 +141,8 @@ export function useResizableListPane(
         const measured = measure();
         if (measured) {
           const currentHeight = bodyRef.current.getBoundingClientRect().height;
-          const nextRatio = currentHeight / measured.flexArea;
-          ratioRef.current = nextRatio;
-          setRatio(nextRatio);
+          ratioRef.current = clampRatio(currentHeight / measured.flexArea);
+          setRatio(ratioRef.current);
           setBodyHeight(Math.round(currentHeight));
         }
       }
@@ -140,21 +162,12 @@ export function useResizableListPane(
       if (!fixed || !measured) return;
 
       const fixedBottom = fixed.getBoundingClientRect().bottom;
-      const nextHeight = Math.max(
-        MIN_BODY_PX,
-        Math.min(
-          measured.maxBody,
-          event.clientY - fixedBottom - LIST_PANE_HANDLE_HEIGHT / 2,
-        ),
-      );
-      const nextRatio = nextHeight / measured.flexArea;
+      const nextHeight =
+        event.clientY - fixedBottom - LIST_PANE_HANDLE_HEIGHT / 2;
 
-      ratioRef.current = nextRatio;
-      setRatio(nextRatio);
-      setBodyHeight(nextHeight);
-      setShowSpacer(nextHeight < measured.maxBody - 1);
+      applyHeight(nextHeight, measured);
     },
-    [measure],
+    [applyHeight, measure],
   );
 
   const endDrag = useCallback(
@@ -178,6 +191,26 @@ export function useResizableListPane(
     saveRatio(paneId, null);
   }, [paneId]);
 
+  const onKeyDown = useCallback(
+    (event: ReactKeyboardEvent<HTMLDivElement>) => {
+      if (event.key !== "ArrowUp" && event.key !== "ArrowDown") return;
+
+      event.preventDefault();
+      const measured = measure();
+      if (!measured) return;
+
+      const current =
+        bodyHeight ??
+        bodyRef.current?.getBoundingClientRect().height ??
+        measured.maxBody;
+      const delta = event.key === "ArrowDown" ? KEYBOARD_STEP_PX : -KEYBOARD_STEP_PX;
+
+      applyHeight(current + delta, measured);
+      saveRatio(paneId, ratioRef.current);
+    },
+    [applyHeight, bodyHeight, measure, paneId],
+  );
+
   const useCustomHeight = ratio !== null;
 
   return {
@@ -193,11 +226,13 @@ export function useResizableListPane(
         ? "screen-scroll-body screen-scroll-body--sheet"
         : "screen-scroll-body",
     handleProps: {
+      tabIndex: 0,
       onPointerDown,
       onPointerMove,
       onPointerUp: endDrag,
       onPointerCancel: endDrag,
       onDoubleClick,
+      onKeyDown,
     },
   };
 }

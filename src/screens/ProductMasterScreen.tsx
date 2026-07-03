@@ -68,6 +68,17 @@ export function ProductMasterScreen({ data, onUpdate, onBack }: Props) {
     }
   };
 
+  const tryUpdate = (fn: () => PriceData): boolean => {
+    setError(null);
+    try {
+      onUpdate(fn());
+      return true;
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "操作できませんでした");
+      return false;
+    }
+  };
+
   const defaultCategory = data.categories.includes("その他")
     ? "その他"
     : (data.categories[data.categories.length - 1] ?? "その他");
@@ -231,7 +242,7 @@ export function ProductMasterScreen({ data, onUpdate, onBack }: Props) {
                       product={product}
                       categories={data.categories}
                       onUpdate={(updates) =>
-                        run(() => updateProduct(data, product.code, updates))
+                        tryUpdate(() => updateProduct(data, product.code, updates))
                       }
                       onDelete={() => {
                         if (
@@ -356,7 +367,11 @@ export function ProductMasterScreen({ data, onUpdate, onBack }: Props) {
 type ProductRowProps = {
   product: PriceData["products"][number];
   categories: string[];
-  onUpdate: (updates: { name?: string; category?: string; code?: string }) => void;
+  onUpdate: (updates: {
+    name?: string;
+    category?: string;
+    code?: string;
+  }) => boolean;
   onDelete: () => void;
 };
 
@@ -371,12 +386,20 @@ function ProductRow({ product, categories, onUpdate, onDelete }: ProductRowProps
     setCategory(product.category);
   }, [product.code, product.name, product.category]);
 
+  const revert = () => {
+    setCode(product.code);
+    setName(product.name);
+    setCategory(product.category);
+  };
+
   const saveIfChanged = () => {
     const updates: { name?: string; category?: string; code?: string } = {};
     if (name.trim() !== product.name) updates.name = name;
     if (category !== product.category) updates.category = category;
     if (code.trim() !== product.code) updates.code = code;
-    if (Object.keys(updates).length > 0) onUpdate(updates);
+    if (Object.keys(updates).length > 0 && !onUpdate(updates)) {
+      revert();
+    }
   };
 
   return (
@@ -402,8 +425,11 @@ function ProductRow({ product, categories, onUpdate, onDelete }: ProductRowProps
           className="category-select"
           value={category}
           onChange={(e) => {
-            setCategory(e.target.value);
-            onUpdate({ category: e.target.value });
+            const next = e.target.value;
+            setCategory(next);
+            if (!onUpdate({ category: next })) {
+              setCategory(product.category);
+            }
           }}
         >
           {categories.map((cat) => (

@@ -92,6 +92,7 @@ export function ProductSheetView({
                   <tr
                     key={product.code}
                     className={highlighted ? "highlighted" : undefined}
+                    role="button"
                     onClick={() => onSelect(product.code)}
                     tabIndex={0}
                     onKeyDown={(e) => {

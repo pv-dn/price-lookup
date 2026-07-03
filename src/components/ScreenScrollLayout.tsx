@@ -31,7 +31,7 @@ export function ScreenScrollLayout({
     showSpacer,
     bodyClassName,
     handleProps,
-  } = useResizableListPane(paneId, bodyVariant);
+  } = useResizableListPane(paneId, bodyVariant, Boolean(footer));
 
   const rootClassName = ["screen", "screen-scroll-layout", className]
     .filter(Boolean)

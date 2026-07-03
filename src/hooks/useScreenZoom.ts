@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { Screen } from "../types";
 
 const STORAGE_PREFIX = "price-lookup-zoom-";
@@ -33,12 +33,18 @@ function saveZoom(screen: Screen, zoom: number): void {
 
 export function useScreenZoom(screen: Screen) {
   const [zoom, setZoom] = useState(() => loadZoom(screen));
+  const skipSaveRef = useRef(false);
 
   useEffect(() => {
+    skipSaveRef.current = true;
     setZoom(loadZoom(screen));
   }, [screen]);
 
   useEffect(() => {
+    if (skipSaveRef.current) {
+      skipSaveRef.current = false;
+      return;
+    }
     saveZoom(screen, zoom);
   }, [screen, zoom]);
 

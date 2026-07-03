@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { ScreenScrollLayout } from "../components/ScreenScrollLayout";
 import type { BasePriceEntry, Customer, PriceEntry, Product } from "../types";
 import { normalizeQuery } from "../utils/format";
@@ -31,6 +31,10 @@ export function ManualPricesScreen({
   }, [customer.id, prices]);
 
   const [draft, setDraft] = useState<Map<string, string>>(() => new Map(initialMap));
+
+  useEffect(() => {
+    setDraft(new Map(initialMap));
+  }, [initialMap]);
 
   const filtered = useMemo(() => {
     const q = normalizeQuery(query);

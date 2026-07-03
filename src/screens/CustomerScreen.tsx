@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect, useRef } from "react";
 import { ScreenScrollLayout } from "../components/ScreenScrollLayout";
 import type { Customer } from "../types";
 import { normalizeQuery } from "../utils/format";
@@ -14,6 +14,11 @@ export function CustomerScreen({ customers, onSelect, onAdd }: Props) {
   const [newName, setNewName] = useState("");
   const [addError, setAddError] = useState<string | null>(null);
   const [showAdd, setShowAdd] = useState(false);
+  const addInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (showAdd) addInputRef.current?.focus();
+  }, [showAdd]);
 
   const sorted = useMemo(() => {
     const linked = customers.filter((c) => !c.manual);
@@ -84,7 +89,7 @@ export function CustomerScreen({ customers, onSelect, onAdd }: Props) {
               placeholder="客先名を入力"
               value={newName}
               onChange={(e) => setNewName(e.target.value)}
-              autoFocus
+              ref={addInputRef}
             />
             <div className="add-customer-actions">
               <button

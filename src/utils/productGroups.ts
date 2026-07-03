@@ -10,6 +10,20 @@ export function groupProductsByCategory(
   products: Product[],
   categoryOrder: string[],
 ): ProductGroup[] {
+  if (categoryOrder.length === 0) {
+    const buckets = new Map<string, Product[]>();
+    for (const product of products) {
+      const cat = product.category?.trim() || "その他";
+      const list = buckets.get(cat) ?? [];
+      list.push(product);
+      buckets.set(cat, list);
+    }
+    return [...buckets.entries()].map(([label, items]) => ({
+      label,
+      products: items,
+    }));
+  }
+
   const buckets = new Map<string, Product[]>();
 
   for (const cat of categoryOrder) {

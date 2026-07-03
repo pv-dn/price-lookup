@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { MainTabBar, mainTabFromScreen } from "./components/MainTabBar";
 import type { MainTab } from "./components/MainTabBar";
 import { ZoomControls } from "./components/ZoomControls";
@@ -87,9 +87,35 @@ function App() {
     const added = next.customers.find((c) => c.name === name.trim() && c.manual);
     if (added) {
       setCustomerId(added.id);
+      setProductCode(null);
       setScreen("edit-prices");
     }
   };
+
+  useEffect(() => {
+    if (!data) return;
+
+    if (screen === "search" && (!customerId || !customer)) {
+      setCustomerId(null);
+      setProductCode(null);
+      setScreen("customers");
+      return;
+    }
+
+    if (screen === "edit-prices" && (!customerId || !customer?.manual)) {
+      setProductCode(null);
+      setScreen(customer ? "search" : "customers");
+      return;
+    }
+
+    if (
+      screen === "price" &&
+      (!customerId || !customer || !productCode || !product)
+    ) {
+      setProductCode(null);
+      setScreen(customer ? "search" : "customers");
+    }
+  }, [data, screen, customerId, productCode, customer, product]);
 
   const handleMainTab = (tab: MainTab) => {
     if (tab === "customers") {

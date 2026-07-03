@@ -1131,10 +1131,6 @@
   background: var(--surface);
 }
 
-.app:has(.search-screen--sheet) {
-  max-width: 100%;
-}
-
 .category-chips {
   display: flex;
   flex-wrap: wrap;

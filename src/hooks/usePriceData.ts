@@ -19,7 +19,12 @@ export function usePriceData() {
 
   const applyData = useCallback((newData: PriceData) => {
     const normalized = ensureProductCategories(newData);
-    saveStoredData(normalized);
+    try {
+      saveStoredData(normalized);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "データを保存できませんでした");
+      throw e;
+    }
     setData(normalized);
     setError(null);
   }, []);
