@@ -14,6 +14,17 @@ npm install
 npm run dev
 ```
 
+Cursor では **必ず専用ウィンドウ**で開いてください。
+
+```powershell
+cd "C:\Users\e--yo\Apps\価格参照"
+.\open-in-cursor.ps1
+```
+
+または `Apps\Cursor用\workspaces\価格参照.code-workspace` をダブルクリック。
+
+**注意:** Shift Board のウィンドウで価格参照を触ると、タブやタイトルが Shift Board のまま残り、別アプリと混ざった状態になります。価格参照のときは Shift Board のウィンドウを閉じて、上の方法で開き直してください。
+
 ## デプロイ
 
 `main` ブランチへ push すると GitHub Actions が GitHub Pages に公開します。

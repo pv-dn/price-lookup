@@ -23,8 +23,18 @@ https://github.com/pv-dn/price-lookup
 
 | 呼び名 | 関係 |
 |--------|------|
-| **プゥルヴー伝票** | 品番・品名・単価の正データ（JSON / Firestore） |
+| **プゥルヴー伝票** | 品番・品名・単価の正データ（JSON / Firestore）。**コードは共有していません** |
 | **プゥルヴー在庫** | 別アプリ（共有コードなし） |
+
+## Cursor で開くとき
+
+- **このフォルダだけ**開いてください: `C:\Users\e--yo\Apps\価格参照`
+- または次のどちらか（おすすめ）:
+  - `Apps\Cursor用\workspaces\価格参照.code-workspace` をダブルクリック
+  - `open-in-cursor.ps1` を実行
+- **Shift Board / シフト管理のウィンドウに価格参照を開かない**でください  
+  （タイトルが `Shift Board - Cursor` のままになる＝別アプリと混在した状態です）
+- ウィンドウ上部のタイトルが **「ホワイト事業部価格表 - Cursor」** になっていれば OK
 
 ## デプロイ
 
