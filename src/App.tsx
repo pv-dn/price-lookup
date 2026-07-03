@@ -1,6 +1,8 @@
 import { useMemo, useState } from "react";
 import { usePriceData } from "./hooks/usePriceData";
 import { addManualCustomer, setManualPrices } from "./lib/manualCustomers";
+import { setBasePrices } from "./lib/basePrices";
+import { BasePricesScreen } from "./screens/BasePricesScreen";
 import { CustomerScreen } from "./screens/CustomerScreen";
 import { ManualPricesScreen } from "./screens/ManualPricesScreen";
 import { ProductMasterScreen } from "./screens/ProductMasterScreen";
@@ -136,6 +138,19 @@ function App() {
             }}
             onBack={goCustomers}
             onOpenProductMaster={() => setScreen("product-master")}
+            onOpenBasePrices={() => setScreen("base-prices")}
+          />
+        )}
+
+        {screen === "base-prices" && (
+          <BasePricesScreen
+            products={data.products}
+            basePrices={data.basePrices}
+            onSave={(entries) => {
+              applyData(setBasePrices(data, entries));
+              setScreen("settings");
+            }}
+            onBack={() => setScreen("settings")}
           />
         )}
 
@@ -176,6 +191,7 @@ function App() {
             customer={customer}
             products={data.products}
             prices={data.prices}
+            basePrices={data.basePrices}
             onSave={(entries) => {
               applyData(setManualPrices(data, customer.id, entries));
               setScreen("search");
@@ -189,6 +205,7 @@ function App() {
             customer={customer}
             product={product}
             price={price}
+            basePrice={data.basePrices.find((p) => p.code === product.code)}
             meta={data.meta}
             onBack={handleBackToSearch}
             onReset={goCustomers}

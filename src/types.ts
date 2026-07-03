@@ -19,6 +19,12 @@ export type Product = {
   category: string;
 };
 
+export type BasePriceEntry = {
+  code: string;
+  price: number;
+  qtyTiers?: QtyTier[];
+};
+
 export type PriceEntry = {
   customerId: string;
   code: string;
@@ -54,6 +60,8 @@ export type PriceData = {
   categories: string[];
   customers: Customer[];
   products: Product[];
+  /** 全客先共通の基本単価（たたき台） */
+  basePrices: BasePriceEntry[];
   prices: PriceEntry[];
 };
 
@@ -62,6 +70,7 @@ export type Screen =
   | "search"
   | "price"
   | "settings"
+  | "base-prices"
   | "edit-prices"
   | "product-master";
 

@@ -84,6 +84,7 @@ export function convertPourVousBackup(
     customers,
     categories,
     products,
+    basePrices: [],
     prices,
   };
 }

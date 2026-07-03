@@ -24,7 +24,12 @@ export function mergePourVousWithLocal(
     categories,
   );
 
-  const base = { ...imported, categories, products };
+  const base = {
+    ...imported,
+    categories,
+    products,
+    basePrices: existing?.basePrices ?? imported.basePrices ?? [],
+  };
 
   if (!existing) return base;
 
@@ -91,10 +96,11 @@ export function updateProductCategory(
 }
 
 export function ensureProductCategories(data: PriceData): PriceData {
+  const withBase = { ...data, basePrices: data.basePrices ?? [] };
   const categories =
-    data.categories?.length > 0 ? data.categories : defaultCategories();
+    withBase.categories?.length > 0 ? withBase.categories : defaultCategories();
 
-  const products = data.products.map((p) => ({
+  const products = withBase.products.map((p) => ({
     ...p,
     category: normalizeCategory(
       p.category ?? guessCategory(p.name, categories),
@@ -108,11 +114,13 @@ export function ensureProductCategories(data: PriceData): PriceData {
     data.categories.some((c, i) => c !== categories[i]);
 
   const productsChanged = products.some(
-    (p, i) => p.category !== data.products[i]?.category,
+    (p, i) => p.category !== withBase.products[i]?.category,
   );
 
-  if (!categoriesChanged && !productsChanged) return data;
-  return { ...data, categories, products };
+  if (!categoriesChanged && !productsChanged && data.basePrices !== undefined) {
+    return withBase;
+  }
+  return { ...withBase, categories, products };
 }
 
 export function countByCategory(

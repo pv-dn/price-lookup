@@ -42,6 +42,7 @@
     { "code": "S-107", "name": "中華麺 1kg", "category": "その他" },
     { "code": "T-118", "name": "パスタ 2kg", "category": "その他" }
   ],
+  "basePrices": [],
   "prices": [
     { "customerId": "c01", "code": "A-001", "price": 420, "previousPrice": 380, "effectiveFrom": "2026-07-01" },
     { "customerId": "c01", "code": "B-012", "price": 680, "previousPrice": 620, "effectiveFrom": "2026-07-01" },

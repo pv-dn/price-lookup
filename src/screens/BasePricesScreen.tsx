@@ -1,33 +1,24 @@
 import { useMemo, useState } from "react";
-import type { BasePriceEntry, Customer, PriceEntry, Product } from "../types";
+import type { PriceData, Product } from "../types";
 import { normalizeQuery } from "../utils/format";
 
 type Props = {
-  customer: Customer;
   products: Product[];
-  prices: PriceEntry[];
-  basePrices: BasePriceEntry[];
+  basePrices: PriceData["basePrices"];
   onSave: (entries: { code: string; price: number }[]) => void;
   onBack: () => void;
 };
 
-export function ManualPricesScreen({
-  customer,
-  products,
-  prices,
-  basePrices,
-  onSave,
-  onBack,
-}: Props) {
+export function BasePricesScreen({ products, basePrices, onSave, onBack }: Props) {
   const [query, setQuery] = useState("");
 
   const initialMap = useMemo(() => {
     const m = new Map<string, string>();
-    for (const p of prices) {
-      if (p.customerId === customer.id) m.set(p.code, String(p.price));
+    for (const p of basePrices) {
+      m.set(p.code, String(p.price));
     }
     return m;
-  }, [customer.id, prices]);
+  }, [basePrices]);
 
   const [draft, setDraft] = useState<Map<string, string>>(() => new Map(initialMap));
 
@@ -62,11 +53,6 @@ export function ManualPricesScreen({
 
   const filledCount = [...draft.values()].filter((v) => v.trim() !== "").length;
 
-  const handleLoadFromBase = () => {
-    if (basePrices.length === 0) return;
-    setDraft(new Map(basePrices.map((e) => [e.code, String(e.price)])));
-  };
-
   return (
     <div className="screen">
       <header className="screen-header with-back">
@@ -74,13 +60,14 @@ export function ManualPricesScreen({
           ← 戻る
         </button>
         <div>
-          <p className="label">手入力の客先</p>
-          <h1 className="customer-name">{customer.name}</h1>
+          <p className="label">全客先共通</p>
+          <h1 className="customer-name">基本価格表</h1>
         </div>
       </header>
 
       <p className="settings-desc">
-        品番は伝票アプリのマスタを使います。単価だけ入力してください（{filledCount}件設定中）
+        ここがたたき台です。品番は伝票マスタを使い、基本単価を入力してください（{filledCount}
+        件設定中）。個別の客先価格はこの表をベースに調整します。
       </p>
 
       <div className="search-box">
@@ -91,18 +78,6 @@ export function ManualPricesScreen({
           onChange={(e) => setQuery(e.target.value)}
         />
       </div>
-
-      {basePrices.length > 0 && (
-        <div className="settings-actions-row" style={{ marginBottom: "0.75rem" }}>
-          <button
-            type="button"
-            className="btn btn-secondary"
-            onClick={handleLoadFromBase}
-          >
-            基本表の単価を読み込む
-          </button>
-        </div>
-      )}
 
       <ul className="manual-price-list">
         {filtered.map((product) => (
@@ -128,7 +103,7 @@ export function ManualPricesScreen({
 
       <div className="actions sticky-actions">
         <button type="button" className="btn btn-primary" onClick={handleSave}>
-          単価を保存
+          基本単価を保存
         </button>
       </div>
     </div>

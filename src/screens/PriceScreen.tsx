@@ -1,4 +1,4 @@
-import type { Customer, PriceData, PriceEntry, Product } from "../types";
+import type { BasePriceEntry, Customer, PriceData, PriceEntry, Product } from "../types";
 import { formatYen } from "../utils/format";
 import {
   displayPrice,
@@ -11,6 +11,7 @@ type Props = {
   customer: Customer;
   product: Product;
   price: PriceEntry | undefined;
+  basePrice?: BasePriceEntry;
   meta: PriceData["meta"];
   onBack: () => void;
   onReset: () => void;
@@ -20,6 +21,7 @@ export function PriceScreen({
   customer,
   product,
   price,
+  basePrice,
   meta,
   onBack,
   onReset,
@@ -27,6 +29,11 @@ export function PriceScreen({
   const showPrevious =
     price?.previousPrice !== undefined && price.previousPrice !== price.price;
   const tiered = hasQtyTiers(price);
+  const showBaseDiff =
+    basePrice &&
+    price &&
+    !tiered &&
+    price.price !== basePrice.price;
 
   return (
     <div className="screen">
@@ -70,6 +77,15 @@ export function PriceScreen({
               ))}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {showBaseDiff && basePrice && price && (
+        <div className="notice notice-info">
+          基本単価: {formatYen(basePrice.price)} → この客先: {formatYen(price.price)}
+          {price.price > basePrice.price
+            ? `（+${formatYen(price.price - basePrice.price)}）`
+            : `（${formatYen(price.price - basePrice.price)}）`}
         </div>
       )}
 

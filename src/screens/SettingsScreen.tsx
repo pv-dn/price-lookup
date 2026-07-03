@@ -16,6 +16,7 @@ type Props = {
   onResetSample: () => void;
   onBack: () => void;
   onOpenProductMaster: () => void;
+  onOpenBasePrices: () => void;
 };
 
 const SOURCE_LABELS: Record<string, string> = {
@@ -25,7 +26,7 @@ const SOURCE_LABELS: Record<string, string> = {
   excel: "価格表Excel",
 };
 
-export function SettingsScreen({ data, onApply, onResetSample, onBack, onOpenProductMaster }: Props) {
+export function SettingsScreen({ data, onApply, onResetSample, onBack, onOpenProductMaster, onOpenBasePrices }: Props) {
   const { user, authReady, login, logout } = useAuth();
   const fileRef = useRef<HTMLInputElement>(null);
   const excelRef = useRef<HTMLInputElement>(null);
@@ -165,6 +166,10 @@ export function SettingsScreen({ data, onApply, onResetSample, onBack, onOpenPro
             <dd>{data?.products.length ?? 0}件</dd>
           </div>
           <div className="meta-row">
+            <dt>基本単価</dt>
+            <dd>{data?.basePrices.length ?? 0}件</dd>
+          </div>
+          <div className="meta-row">
             <dt>単価設定</dt>
             <dd>{data?.prices.length ?? 0}件</dd>
           </div>
@@ -176,6 +181,16 @@ export function SettingsScreen({ data, onApply, onResetSample, onBack, onOpenPro
           )}
         </dl>
       </div>
+
+      <section className="settings-section">
+        <h2 className="settings-title">基本価格表</h2>
+        <p className="settings-desc">
+          全客先共通のたたき台です。ここで基本単価を入力し、手入力の客先ではこの表をベースに調整できます。
+        </p>
+        <button type="button" className="btn btn-secondary" onClick={onOpenBasePrices}>
+          基本価格表を編集
+        </button>
+      </section>
 
       <section className="settings-section">
         <h2 className="settings-title">品目マスタ</h2>
