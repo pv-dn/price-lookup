@@ -23,6 +23,7 @@ type Tab = "products" | "genres";
 
 export function ProductMasterScreen({ data, onUpdate, onBack }: Props) {
   const [tab, setTab] = useState<Tab>("products");
+  const [editMode, setEditMode] = useState(false);
   const [query, setQuery] = useState("");
   const [filterCategory, setFilterCategory] = useState<string | "all">("all");
   const [newGenre, setNewGenre] = useState("");
@@ -111,46 +112,58 @@ export function ProductMasterScreen({ data, onUpdate, onBack }: Props) {
               ジャンル（{data.categories.length}）
             </button>
           </div>
+
+          <button
+            type="button"
+            className={`base-btn ${editMode ? "base-btn-editor-active" : "base-btn-editor"}`}
+            onClick={() => setEditMode((v) => !v)}
+          >
+            {editMode ? "閲覧に戻す" : "編集"}
+          </button>
         </div>
 
         {error && <div className="notice notice-err">{error}</div>}
 
         {tab === "products" && (
           <div className="pm-product-toolbar">
-            <input
-              className="pm-input pm-input-code"
-              placeholder="品番（空欄で自動）"
-              value={newCode}
-              onChange={(e) => setNewCode(e.target.value)}
-            />
-            <input
-              className="pm-input pm-input-name"
-              placeholder="品名"
-              value={newName}
-              onChange={(e) => setNewName(e.target.value)}
-            />
-            <select
-              className="pm-select"
-              value={newCategory}
-              onChange={(e) => setNewCategory(e.target.value)}
-            >
-              {data.categories.map((cat) => (
-                <option key={cat} value={cat}>{cat}</option>
-              ))}
-            </select>
-            <button
-              type="button"
-              className="base-btn base-btn-save"
-              disabled={!newName.trim()}
-              onClick={() => {
-                run(() => addProduct(data, newCode, newName, newCategory));
-                setNewCode("");
-                setNewName("");
-                setNewCategory(defaultCategory);
-              }}
-            >
-              追加
-            </button>
+            {editMode && (
+              <>
+                <input
+                  className="pm-input pm-input-code"
+                  placeholder="品番（空欄で自動）"
+                  value={newCode}
+                  onChange={(e) => setNewCode(e.target.value)}
+                />
+                <input
+                  className="pm-input pm-input-name"
+                  placeholder="品名"
+                  value={newName}
+                  onChange={(e) => setNewName(e.target.value)}
+                />
+                <select
+                  className="pm-select"
+                  value={newCategory}
+                  onChange={(e) => setNewCategory(e.target.value)}
+                >
+                  {data.categories.map((cat) => (
+                    <option key={cat} value={cat}>{cat}</option>
+                  ))}
+                </select>
+                <button
+                  type="button"
+                  className="base-btn base-btn-save"
+                  disabled={!newName.trim()}
+                  onClick={() => {
+                    run(() => addProduct(data, newCode, newName, newCategory));
+                    setNewCode("");
+                    setNewName("");
+                    setNewCategory(defaultCategory);
+                  }}
+                >
+                  追加
+                </button>
+              </>
+            )}
 
             <div className="pm-search">
               <input
@@ -185,7 +198,7 @@ export function ProductMasterScreen({ data, onUpdate, onBack }: Props) {
           </div>
         )}
 
-        {tab === "genres" && (
+        {tab === "genres" && editMode && (
           <div className="pm-genre-toolbar">
             <input
               className="pm-input"
@@ -222,29 +235,37 @@ export function ProductMasterScreen({ data, onUpdate, onBack }: Props) {
                     <th>品番</th>
                     <th>品名</th>
                     <th>ジャンル</th>
-                    <th aria-label="操作" />
+                    {editMode && <th aria-label="操作" />}
                   </tr>
                 </thead>
                 <tbody>
-                  {filtered.map((product) => (
-                    <ProductRow
-                      key={product.code}
-                      product={product}
-                      categories={data.categories}
-                      onUpdate={(updates) =>
-                        tryUpdate(() => updateProduct(data, product.code, updates))
-                      }
-                      onDelete={() => {
-                        if (
-                          confirm(
-                            `「${product.code} ${product.name}」を削除しますか？\n単価データも消えます。`,
-                          )
-                        ) {
-                          run(() => removeProduct(data, product.code));
+                  {filtered.map((product) =>
+                    editMode ? (
+                      <ProductRow
+                        key={product.code}
+                        product={product}
+                        categories={data.categories}
+                        onUpdate={(updates) =>
+                          tryUpdate(() => updateProduct(data, product.code, updates))
                         }
-                      }}
-                    />
-                  ))}
+                        onDelete={() => {
+                          if (
+                            confirm(
+                              `「${product.code} ${product.name}」を削除しますか？\n単価データも消えます。`,
+                            )
+                          ) {
+                            run(() => removeProduct(data, product.code));
+                          }
+                        }}
+                      />
+                    ) : (
+                      <tr key={product.code}>
+                        <td className="master-code">{product.code}</td>
+                        <td className="master-name">{product.name}</td>
+                        <td className="master-category">{product.category}</td>
+                      </tr>
+                    ),
+                  )}
                 </tbody>
               </table>
             </div>
@@ -262,7 +283,7 @@ export function ProductMasterScreen({ data, onUpdate, onBack }: Props) {
             {data.categories.map((genre, index) => (
               <li key={genre} className="genre-row">
                 <span className="genre-order">{index + 1}</span>
-                {editingGenre === genre ? (
+                {editMode && editingGenre === genre ? (
                   <input
                     className="settings-input genre-rename-input"
                     value={editingName}
@@ -277,6 +298,7 @@ export function ProductMasterScreen({ data, onUpdate, onBack }: Props) {
                     </span>
                   </span>
                 )}
+                {editMode && (
                 <div className="genre-actions">
                   {editingGenre === genre ? (
                     <>
@@ -346,6 +368,7 @@ export function ProductMasterScreen({ data, onUpdate, onBack }: Props) {
                     </>
                   )}
                 </div>
+                )}
               </li>
             ))}
           </ul>

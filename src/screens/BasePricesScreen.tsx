@@ -382,8 +382,8 @@ export function BasePricesScreen({
             categories={categories}
             draft={draft}
             onSetPrice={setPrice}
-            onEditProduct={handleEditProduct}
-            onDeleteProduct={handleDeleteProduct}
+            onEditProduct={showEditor ? handleEditProduct : undefined}
+            onDeleteProduct={showEditor ? handleDeleteProduct : undefined}
           />
         ) : (
           <ul className="manual-price-list">
@@ -391,10 +391,14 @@ export function BasePricesScreen({
               <li key={product.code} className="manual-price-row">
                 <div className="manual-price-info">
                   <span className="list-item-code">{product.code}</span>
-                  <EditableProductName
-                    name={product.name}
-                    onSave={(name) => handleEditProduct(product.code, { name })}
-                  />
+                  {showEditor ? (
+                    <EditableProductName
+                      name={product.name}
+                      onSave={(name) => handleEditProduct(product.code, { name })}
+                    />
+                  ) : (
+                    <span className="list-item-title">{product.name}</span>
+                  )}
                 </div>
                 <div className="manual-price-input-wrap">
                   <span className="manual-yen">¥</span>
@@ -407,14 +411,16 @@ export function BasePricesScreen({
                     onChange={(e) => setPrice(product.code, e.target.value)}
                   />
                 </div>
-                <button
-                  type="button"
-                  className="base-inline-delete"
-                  onClick={() => handleDeleteProduct(product.code, product.name)}
-                  title="削除"
-                >
-                  ×
-                </button>
+                {showEditor && (
+                  <button
+                    type="button"
+                    className="base-inline-delete"
+                    onClick={() => handleDeleteProduct(product.code, product.name)}
+                    title="削除"
+                  >
+                    ×
+                  </button>
+                )}
               </li>
             ))}
           </ul>
