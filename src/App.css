@@ -1483,6 +1483,17 @@
   border-radius: 10px;
 }
 
+.master-two-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  padding: 0 4px;
+}
+
+.master-table-col {
+  overflow-y: auto;
+}
+
 .master-table {
   width: 100%;
   border-collapse: collapse;

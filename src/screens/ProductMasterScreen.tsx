@@ -228,19 +228,19 @@ export function ProductMasterScreen({ data, onUpdate, onBack }: Props) {
     >
         {tab === "products" && (
           <>
-            <div className="master-table-wrap">
-              <table className="master-table">
-                <thead>
-                  <tr>
-                    <th>品番</th>
-                    <th>品名</th>
-                    <th>ジャンル</th>
-                    {editMode && <th aria-label="操作" />}
-                  </tr>
-                </thead>
-                <tbody>
-                  {filtered.map((product) =>
-                    editMode ? (
+            {editMode ? (
+              <div className="master-table-wrap">
+                <table className="master-table">
+                  <thead>
+                    <tr>
+                      <th>品番</th>
+                      <th>品名</th>
+                      <th>ジャンル</th>
+                      <th aria-label="操作" />
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filtered.map((product) => (
                       <ProductRow
                         key={product.code}
                         product={product}
@@ -258,17 +258,13 @@ export function ProductMasterScreen({ data, onUpdate, onBack }: Props) {
                           }
                         }}
                       />
-                    ) : (
-                      <tr key={product.code}>
-                        <td className="master-code">{product.code}</td>
-                        <td className="master-name">{product.name}</td>
-                        <td className="master-category">{product.category}</td>
-                      </tr>
-                    ),
-                  )}
-                </tbody>
-              </table>
-            </div>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <ReadonlyProductColumns products={filtered} />
+            )}
 
             {filtered.length === 0 && (
               <p className="settings-desc master-empty">
@@ -458,5 +454,41 @@ function ProductRow({ product, categories, onUpdate, onDelete }: ProductRowProps
         </button>
       </td>
     </tr>
+  );
+}
+
+function ReadonlyProductColumns({ products }: { products: PriceData["products"] }) {
+  const half = Math.ceil(products.length / 2);
+  const left = products.slice(0, half);
+  const right = products.slice(half);
+
+  const renderTable = (items: PriceData["products"]) => (
+    <div className="master-table-wrap master-table-col">
+      <table className="master-table">
+        <thead>
+          <tr>
+            <th>品番</th>
+            <th>品名</th>
+            <th>ジャンル</th>
+          </tr>
+        </thead>
+        <tbody>
+          {items.map((p) => (
+            <tr key={p.code}>
+              <td className="master-code">{p.code}</td>
+              <td className="master-name">{p.name}</td>
+              <td className="master-category">{p.category}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+
+  return (
+    <div className="master-two-col">
+      {renderTable(left)}
+      {renderTable(right)}
+    </div>
   );
 }
