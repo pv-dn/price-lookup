@@ -25,6 +25,7 @@ export function ProductMasterScreen({ data, onUpdate, onBack }: Props) {
   const [tab, setTab] = useState<Tab>("products");
   const [editMode, setEditMode] = useState(false);
   const [query, setQuery] = useState("");
+  const [sortBy, setSortBy] = useState<"genre" | "name" | "code">("genre");
   const [filterCategory, setFilterCategory] = useState<string | "all">("all");
   const [newGenre, setNewGenre] = useState("");
   const [newCode, setNewCode] = useState("");
@@ -42,9 +43,8 @@ export function ProductMasterScreen({ data, onUpdate, onBack }: Props) {
   );
 
   const filtered = useMemo(() => {
-    let list = [...data.products].sort((a, b) =>
-      a.code.localeCompare(b.code, "ja"),
-    );
+    let list = [...data.products];
+
     if (filterCategory !== "all") {
       list = list.filter((p) => p.category === filterCategory);
     }
@@ -57,8 +57,24 @@ export function ProductMasterScreen({ data, onUpdate, onBack }: Props) {
           p.name.includes(query.trim()),
       );
     }
+
+    const catOrder = new Map(data.categories.map((c, i) => [c, i]));
+
+    list.sort((a, b) => {
+      if (sortBy === "genre") {
+        const ca = catOrder.get(a.category) ?? 9999;
+        const cb = catOrder.get(b.category) ?? 9999;
+        if (ca !== cb) return ca - cb;
+        return a.name.localeCompare(b.name, "ja");
+      }
+      if (sortBy === "name") {
+        return a.name.localeCompare(b.name, "ja");
+      }
+      return a.code.localeCompare(b.code, "ja");
+    });
+
     return list;
-  }, [data.products, filterCategory, query]);
+  }, [data.products, data.categories, filterCategory, query, sortBy]);
 
   const run = (fn: () => PriceData) => {
     setError(null);
@@ -172,6 +188,31 @@ export function ProductMasterScreen({ data, onUpdate, onBack }: Props) {
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
               />
+            </div>
+
+            <div className="pm-sort-toggle">
+              <span className="pm-sort-label">並替</span>
+              <button
+                type="button"
+                className={`pm-chip${sortBy === "genre" ? " active" : ""}`}
+                onClick={() => setSortBy("genre")}
+              >
+                ジャンル
+              </button>
+              <button
+                type="button"
+                className={`pm-chip${sortBy === "name" ? " active" : ""}`}
+                onClick={() => setSortBy("name")}
+              >
+                あいうえお
+              </button>
+              <button
+                type="button"
+                className={`pm-chip${sortBy === "code" ? " active" : ""}`}
+                onClick={() => setSortBy("code")}
+              >
+                品番
+              </button>
             </div>
 
             <div className="pm-filter-chips">

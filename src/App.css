@@ -1673,6 +1673,19 @@
   color: var(--text-tertiary);
 }
 
+.pm-sort-toggle {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  flex-wrap: wrap;
+}
+
+.pm-sort-label {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  margin-right: 2px;
+}
+
 .pm-filter-chips {
   display: flex;
   gap: 3px;
