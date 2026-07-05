@@ -10,7 +10,7 @@ function fallbackCategory(categories: string[]): string {
   return categories[categories.length - 1] ?? "その他";
 }
 
-/** 取込・同期時にジャンル設定と手入力客先を残す */
+/** 取込・同期時にジャンル設定・手入力品目・手入力客先を残す */
 export function mergePourVousWithLocal(
   imported: PriceData,
   existing: PriceData | null,
@@ -33,17 +33,32 @@ export function mergePourVousWithLocal(
 
   if (!existing) return base;
 
-  const manualCustomers = getManualCustomers(existing);
-  if (manualCustomers.length === 0) return base;
+  const importedCodes = new Set(imported.products.map((p) => p.code));
+  const localOnlyCodes = new Set(
+    existing.products
+      .filter((p) => !importedCodes.has(p.code))
+      .map((p) => p.code),
+  );
 
+  const manualCustomers = getManualCustomers(existing);
   const importedNames = new Set(imported.customers.map((c) => c.name));
   const keptManual = manualCustomers.filter((c) => !importedNames.has(c.name));
-  const keptIds = new Set(keptManual.map((c) => c.id));
-  const keptPrices = existing.prices.filter((p) => keptIds.has(p.customerId));
+  const keptManualIds = new Set(keptManual.map((c) => c.id));
+
+  const importedPriceKeys = new Set(
+    imported.prices.map((p) => `${p.customerId}:${p.code}`),
+  );
+  const keptPrices = existing.prices.filter((p) => {
+    if (importedPriceKeys.has(`${p.customerId}:${p.code}`)) return false;
+    return keptManualIds.has(p.customerId) || localOnlyCodes.has(p.code);
+  });
 
   return {
     ...base,
-    customers: [...imported.customers, ...keptManual],
+    customers:
+      keptManual.length > 0
+        ? [...imported.customers, ...keptManual]
+        : base.customers,
     prices: [...imported.prices, ...keptPrices],
   };
 }
@@ -53,28 +68,33 @@ function mergeProducts(
   existing: Product[] | null,
   categories: string[],
 ): Product[] {
+  const normalize = (p: Product): Product => ({
+    code: p.code,
+    name: p.name,
+    category: normalizeCategory(
+      p.category ?? guessCategory(p.name, categories),
+      categories,
+    ),
+  });
+
   if (!existing?.length) {
-    return imported.map((p) => ({
-      code: p.code,
-      name: p.name,
-      category: normalizeCategory(
-        p.category ?? guessCategory(p.name, categories),
-        categories,
-      ),
-    }));
+    return imported.map(normalize);
   }
 
+  const importedCodes = new Set(imported.map((p) => p.code));
   const localMap = new Map(existing.map((p) => [p.code, p]));
 
-  return imported.map((p) => {
+  const merged = imported.map((p) => {
     const local = localMap.get(p.code);
     const category = local?.category ?? p.category ?? guessCategory(p.name, categories);
-    return {
-      code: p.code,
-      name: p.name,
-      category: normalizeCategory(category, categories),
-    };
+    return normalize({ ...p, category });
   });
+
+  const localOnly = existing
+    .filter((p) => !importedCodes.has(p.code))
+    .map(normalize);
+
+  return [...merged, ...localOnly];
 }
 
 function normalizeCategory(category: string, categories: string[]): string {
