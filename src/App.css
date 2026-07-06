@@ -858,6 +858,13 @@
   line-height: 1.2;
 }
 
+.base-effective-date {
+  margin: 2px 0 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
 .base-btn {
   flex: 0 0 auto;
   display: flex;

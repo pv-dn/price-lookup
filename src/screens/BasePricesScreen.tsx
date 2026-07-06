@@ -11,7 +11,7 @@ import {
   updateProduct,
 } from "../lib/productMaster";
 import type { PriceData } from "../types";
-import { formatYen, normalizeQuery } from "../utils/format";
+import { formatDate, formatYen, normalizeQuery } from "../utils/format";
 import { sortProducts, type ProductSortBy } from "../utils/sortProducts";
 
 type ViewMode = "list" | "sheet";
@@ -36,7 +36,7 @@ export function BasePricesScreen({
   onSave,
   onImportExcel,
 }: Props) {
-  const { products, categories, basePrices } = data;
+  const { products, categories, basePrices, meta } = data;
 
   const [query, setQuery] = useState("");
   const [viewMode, setViewMode] = useState<ViewMode>("sheet");
@@ -164,6 +164,11 @@ export function BasePricesScreen({
             <div className="base-header-title">
               <p className="label">全客先共通</p>
               <h1 className="base-header-name">基本価格表</h1>
+              {!priceEditMode && meta.effectiveFrom && (
+                <p className="base-effective-date">
+                  適用開始日: {formatDate(meta.effectiveFrom)}
+                </p>
+              )}
             </div>
           )}
 
