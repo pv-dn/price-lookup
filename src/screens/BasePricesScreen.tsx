@@ -11,9 +11,16 @@ import {
   updateProduct,
 } from "../lib/productMaster";
 import type { PriceData } from "../types";
-import { normalizeQuery } from "../utils/format";
+import { formatYen, normalizeQuery } from "../utils/format";
 
 type ViewMode = "list" | "sheet";
+
+function hasDraftPrice(draft: Map<string, string>, code: string): boolean {
+  const raw = draft.get(code)?.trim() ?? "";
+  if (!raw) return false;
+  const n = parseInt(raw, 10);
+  return !Number.isNaN(n) && n > 0;
+}
 
 type Props = {
   data: PriceData;
@@ -35,6 +42,7 @@ export function BasePricesScreen({
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState<{ text: string; type: "ok" | "err" } | null>(null);
   const [fullscreen, setFullscreen] = useState(false);
+  const [priceEditMode, setPriceEditMode] = useState(false);
   const [showEditor, setShowEditor] = useState(false);
   const excelRef = useRef<HTMLInputElement>(null);
 
@@ -66,6 +74,11 @@ export function BasePricesScreen({
         p.name.includes(query.trim()),
     );
   }, [products, query]);
+
+  const displayProducts = useMemo(() => {
+    if (priceEditMode) return filtered;
+    return filtered.filter((p) => hasDraftPrice(draft, p.code));
+  }, [filtered, priceEditMode, draft]);
 
   const handleSave = () => {
     const entries: { code: string; price: number }[] = [];
@@ -194,9 +207,19 @@ export function BasePricesScreen({
             </button>
           </div>
 
-          <button type="button" className="base-btn base-btn-save" onClick={handleSave}>
-            保存
+          <button
+            type="button"
+            className={`base-btn ${priceEditMode ? "base-btn-editor-active" : "base-btn-edit-price"}`}
+            onClick={() => setPriceEditMode((v) => !v)}
+          >
+            {priceEditMode ? "閲覧" : "編集"}
           </button>
+
+          {priceEditMode && (
+            <button type="button" className="base-btn base-btn-save" onClick={handleSave}>
+              保存
+            </button>
+          )}
 
           <button
             type="button"
@@ -378,16 +401,17 @@ export function BasePricesScreen({
     >
         {viewMode === "sheet" ? (
           <BasePriceSheetView
-            products={filtered}
+            products={displayProducts}
             categories={categories}
             draft={draft}
+            readOnly={!priceEditMode}
             onSetPrice={setPrice}
             onEditProduct={showEditor ? handleEditProduct : undefined}
             onDeleteProduct={showEditor ? handleDeleteProduct : undefined}
           />
         ) : (
           <ul className="manual-price-list">
-            {filtered.map((product) => (
+            {displayProducts.map((product) => (
               <li key={product.code} className="manual-price-row">
                 <div className="manual-price-info">
                   <span className="list-item-code">{product.code}</span>
@@ -400,17 +424,23 @@ export function BasePricesScreen({
                     <span className="list-item-title">{product.name}</span>
                   )}
                 </div>
-                <div className="manual-price-input-wrap">
-                  <span className="manual-yen">¥</span>
-                  <input
-                    type="number"
-                    className="manual-price-input"
-                    inputMode="numeric"
-                    placeholder="—"
-                    value={draft.get(product.code) ?? ""}
-                    onChange={(e) => setPrice(product.code, e.target.value)}
-                  />
-                </div>
+                {priceEditMode ? (
+                  <div className="manual-price-input-wrap">
+                    <span className="manual-yen">¥</span>
+                    <input
+                      type="number"
+                      className="manual-price-input"
+                      inputMode="numeric"
+                      placeholder="—"
+                      value={draft.get(product.code) ?? ""}
+                      onChange={(e) => setPrice(product.code, e.target.value)}
+                    />
+                  </div>
+                ) : (
+                  <span className="base-price-readonly">
+                    {formatYen(parseInt(draft.get(product.code) ?? "0", 10))}
+                  </span>
+                )}
                 {showEditor && (
                   <button
                     type="button"
@@ -423,6 +453,13 @@ export function BasePricesScreen({
                 )}
               </li>
             ))}
+            {displayProducts.length === 0 && (
+              <p className="settings-desc master-empty">
+                {priceEditMode
+                  ? "品目がありません。"
+                  : "単価が設定された品目がありません。「編集」から入力できます。"}
+              </p>
+            )}
           </ul>
         )}
     </ScreenScrollLayout>

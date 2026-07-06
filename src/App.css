@@ -972,6 +972,23 @@
   border: 1px solid #7b1fa2;
 }
 
+.base-btn-edit-price {
+  background: #fff8e1;
+  color: #f57f17;
+  border: 1px solid #ffcc80;
+}
+
+.base-btn-edit-price:hover {
+  background: #ffecb3;
+}
+
+.base-price-readonly {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
+}
+
 .base-editor-panel {
   background: #faf5ff;
   border: 1px solid #ce93d8;

@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
 import type { Product } from "../types";
+import { formatYen } from "../utils/format";
 import { groupProductsByCategory } from "../utils/productGroups";
 
 type Props = {
   products: Product[];
   categories: string[];
   draft: Map<string, string>;
+  readOnly?: boolean;
   onSetPrice: (code: string, value: string) => void;
   onEditProduct?: (code: string, updates: { name?: string; category?: string }) => void;
   onDeleteProduct?: (code: string, name: string) => void;
@@ -15,6 +17,7 @@ export function BasePriceSheetView({
   products,
   categories,
   draft,
+  readOnly = false,
   onSetPrice,
   onEditProduct,
   onDeleteProduct,
@@ -49,14 +52,20 @@ export function BasePriceSheetView({
                     )}
                   </td>
                   <td className="sheet-price">
-                    <input
-                      type="number"
-                      className="sheet-price-input"
-                      inputMode="numeric"
-                      placeholder="—"
-                      value={draft.get(product.code) ?? ""}
-                      onChange={(e) => onSetPrice(product.code, e.target.value)}
-                    />
+                    {readOnly ? (
+                      <span className="base-price-readonly">
+                        {formatYen(parseInt(draft.get(product.code) ?? "0", 10))}
+                      </span>
+                    ) : (
+                      <input
+                        type="number"
+                        className="sheet-price-input"
+                        inputMode="numeric"
+                        placeholder="—"
+                        value={draft.get(product.code) ?? ""}
+                        onChange={(e) => onSetPrice(product.code, e.target.value)}
+                      />
+                    )}
                   </td>
                   {onDeleteProduct && (
                     <td className="sheet-delete">
