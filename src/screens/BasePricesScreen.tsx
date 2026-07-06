@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { BasePriceSheetView } from "../components/BasePriceSheetView";
 import { ScreenScrollLayout } from "../components/ScreenScrollLayout";
-import { useDragReorder } from "../hooks/useDragReorder";
+import { useSheetColumnWidths } from "../hooks/useSheetColumnWidths";
 import {
   addCategory,
   addProduct,
@@ -105,22 +105,23 @@ export function BasePricesScreen({
       const current = sortProducts(filtered, categories, sortBy, data.productOrder);
       onUpdate(initProductOrderFromProducts(data, current));
     }
+    if (next === "manual") {
+      setViewMode("sheet");
+    }
     setSortBy(next);
   };
 
-  const displayCodes = useMemo(
-    () => displayProducts.map((p) => p.code),
-    [displayProducts],
-  );
-
-  const handleReorder = useCallback(
-    (from: number, to: number) => {
-      onUpdate(reorderDisplayedProducts(data, displayCodes, from, to));
+  const handleReorderInGroup = useCallback(
+    (_groupLabel: string, codes: string[], from: number, to: number) => {
+      onUpdate(reorderDisplayedProducts(data, codes, from, to));
     },
-    [data, displayCodes, onUpdate],
+    [data, onUpdate],
   );
 
-  const getDragProps = useDragReorder(handleReorder);
+  const { getWidth: getColumnWidth, startResize: startColumnResize } =
+    useSheetColumnWidths();
+
+  const sheetBrowseLayout = !priceEditMode && viewMode === "sheet";
 
   const handleSave = () => {
     if (!draftEffectiveFrom.trim()) {
@@ -336,7 +337,7 @@ export function BasePricesScreen({
             手動
           </button>
           {sortBy === "manual" && (
-            <span className="base-sort-hint">リストでドラッグして並替</span>
+            <span className="base-sort-hint">一覧表でドラッグして並替・列幅調整</span>
           )}
         </div>
 
@@ -503,23 +504,19 @@ export function BasePricesScreen({
             categories={categories}
             draft={draft}
             readOnly={!priceEditMode}
+            allowRowReorder={sheetBrowseLayout && sortBy === "manual"}
+            allowColumnResize={sheetBrowseLayout}
+            getColumnWidth={getColumnWidth}
+            onColumnResizeStart={startColumnResize}
+            onReorderInGroup={handleReorderInGroup}
             onSetPrice={setPrice}
             onEditProduct={showEditor ? handleEditProduct : undefined}
             onDeleteProduct={showEditor ? handleDeleteProduct : undefined}
           />
         ) : (
-          <ul className={`manual-price-list${sortBy === "manual" ? " manual-price-list--draggable" : ""}`}>
-            {displayProducts.map((product, index) => (
-              <li
-                key={product.code}
-                className={`manual-price-row${sortBy === "manual" ? " manual-price-row--draggable" : ""}`}
-                {...(sortBy === "manual" ? getDragProps(index) : {})}
-              >
-                {sortBy === "manual" && (
-                  <span className="drag-handle" aria-hidden="true" title="ドラッグで並替">
-                    ⋮⋮
-                  </span>
-                )}
+          <ul className="manual-price-list">
+            {displayProducts.map((product) => (
+              <li key={product.code} className="manual-price-row">
                 <div className="manual-price-info">
                   <span className="list-item-code">{product.code}</span>
                   {showEditor ? (

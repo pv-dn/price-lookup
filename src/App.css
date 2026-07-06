@@ -283,17 +283,30 @@
   align-items: stretch;
   overflow-x: auto;
   overflow-y: hidden;
-  gap: 10px;
+  gap: 0;
   -webkit-overflow-scrolling: touch;
 }
 
-.screen-scroll-body--sheet .sheet-column {
+.sheet-column-wrap {
+  display: flex;
   flex: 0 0 168px;
+  align-items: stretch;
+  min-height: 0;
+  position: relative;
+}
+
+.screen-scroll-body--sheet .sheet-column-wrap {
+  flex: 0 0 168px;
+  height: auto;
+  align-self: stretch;
+}
+
+.screen-scroll-body--sheet .sheet-column {
+  flex: 1;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   min-height: 0;
-  height: auto;
-  align-self: stretch;
 }
 
 .screen-scroll-body-sized {
@@ -1414,6 +1427,42 @@
   min-width: 0;
   display: flex;
   flex-direction: column;
+}
+
+.sheet-column-resize-handle {
+  flex: 0 0 8px;
+  cursor: col-resize;
+  touch-action: none;
+  position: relative;
+  margin-left: 2px;
+}
+
+.sheet-column-resize-handle::after {
+  content: "";
+  position: absolute;
+  top: 8px;
+  bottom: 8px;
+  left: 3px;
+  width: 2px;
+  border-radius: 1px;
+  background: var(--border);
+}
+
+.sheet-column-resize-handle:hover::after,
+.sheet-column-resize-handle:active::after {
+  background: var(--accent);
+}
+
+.sheet-row--draggable {
+  cursor: grab;
+}
+
+.sheet-row--draggable:active {
+  cursor: grabbing;
+}
+
+.sheet-table tbody tr.sheet-row--draggable {
+  cursor: grab;
 }
 
 .sheet-column-scroll {

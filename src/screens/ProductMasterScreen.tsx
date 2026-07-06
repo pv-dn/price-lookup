@@ -1,6 +1,5 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ScreenScrollLayout } from "../components/ScreenScrollLayout";
-import { useDragReorder } from "../hooks/useDragReorder";
 import {
   addCategory,
   addProduct,
@@ -13,11 +12,9 @@ import {
 } from "../lib/productMaster";
 import type { PriceData } from "../types";
 import { normalizeQuery } from "../utils/format";
-import {
-  initProductOrderFromProducts,
-  reorderDisplayedProducts,
-} from "../utils/productOrder";
-import { sortProducts, type ProductSortBy } from "../utils/sortProducts";
+import { sortProducts } from "../utils/sortProducts";
+
+type PmSortBy = "genre" | "name" | "code";
 
 type Props = {
   data: PriceData;
@@ -31,7 +28,7 @@ export function ProductMasterScreen({ data, onUpdate, onBack }: Props) {
   const [tab, setTab] = useState<Tab>("products");
   const [editMode, setEditMode] = useState(false);
   const [query, setQuery] = useState("");
-  const [sortBy, setSortBy] = useState<ProductSortBy>("genre");
+  const [sortBy, setSortBy] = useState<PmSortBy>("genre");
   const [filterCategory, setFilterCategory] = useState<string | "all">("all");
   const [newGenre, setNewGenre] = useState("");
   const [newCode, setNewCode] = useState("");
@@ -64,35 +61,8 @@ export function ProductMasterScreen({ data, onUpdate, onBack }: Props) {
       );
     }
 
-    return sortProducts(list, data.categories, sortBy, data.productOrder);
-  }, [data.products, data.categories, data.productOrder, filterCategory, query, sortBy]);
-
-  const handleSortChange = (next: ProductSortBy) => {
-    if (next === "manual" && !data.productOrder?.length) {
-      const current = sortProducts(
-        filtered,
-        data.categories,
-        sortBy,
-        data.productOrder,
-      );
-      onUpdate(initProductOrderFromProducts(data, current));
-    }
-    setSortBy(next);
-  };
-
-  const displayCodes = useMemo(
-    () => filtered.map((p) => p.code),
-    [filtered],
-  );
-
-  const handleReorder = useCallback(
-    (from: number, to: number) => {
-      onUpdate(reorderDisplayedProducts(data, displayCodes, from, to));
-    },
-    [data, displayCodes, onUpdate],
-  );
-
-  const getDragProps = useDragReorder(handleReorder);
+    return sortProducts(list, data.categories, sortBy);
+  }, [data.products, data.categories, filterCategory, query, sortBy]);
 
   const run = (fn: () => PriceData) => {
     setError(null);
@@ -213,34 +183,24 @@ export function ProductMasterScreen({ data, onUpdate, onBack }: Props) {
               <button
                 type="button"
                 className={`pm-chip${sortBy === "genre" ? " active" : ""}`}
-                onClick={() => handleSortChange("genre")}
+                onClick={() => setSortBy("genre")}
               >
                 ジャンル
               </button>
               <button
                 type="button"
                 className={`pm-chip${sortBy === "name" ? " active" : ""}`}
-                onClick={() => handleSortChange("name")}
+                onClick={() => setSortBy("name")}
               >
                 あいうえお
               </button>
               <button
                 type="button"
                 className={`pm-chip${sortBy === "code" ? " active" : ""}`}
-                onClick={() => handleSortChange("code")}
+                onClick={() => setSortBy("code")}
               >
                 品番
               </button>
-              <button
-                type="button"
-                className={`pm-chip${sortBy === "manual" ? " active" : ""}`}
-                onClick={() => handleSortChange("manual")}
-              >
-                手動
-              </button>
-              {sortBy === "manual" && (
-                <span className="base-sort-hint">ドラッグで並替</span>
-              )}
             </div>
 
             <div className="pm-filter-chips">
@@ -299,10 +259,9 @@ export function ProductMasterScreen({ data, onUpdate, onBack }: Props) {
           <>
             {editMode ? (
               <div className="master-table-wrap">
-                <table className={`master-table${sortBy === "manual" ? " master-table--draggable" : ""}`}>
+                <table className="master-table">
                   <thead>
                     <tr>
-                      {sortBy === "manual" && <th className="col-drag" aria-label="並替" />}
                       <th>品番</th>
                       <th>品名</th>
                       <th>ジャンル</th>
@@ -310,13 +269,11 @@ export function ProductMasterScreen({ data, onUpdate, onBack }: Props) {
                     </tr>
                   </thead>
                   <tbody>
-                    {filtered.map((product, index) => (
+                    {filtered.map((product) => (
                       <ProductRow
                         key={product.code}
                         product={product}
                         categories={data.categories}
-                        draggable={sortBy === "manual"}
-                        dragProps={sortBy === "manual" ? getDragProps(index) : undefined}
                         onUpdate={(updates) =>
                           tryUpdate(() => updateProduct(data, product.code, updates))
                         }
@@ -334,11 +291,6 @@ export function ProductMasterScreen({ data, onUpdate, onBack }: Props) {
                   </tbody>
                 </table>
               </div>
-            ) : sortBy === "manual" ? (
-              <DraggableProductList
-                products={filtered}
-                getDragProps={getDragProps}
-              />
             ) : (
               <ReadonlyProductColumns products={filtered} />
             )}
@@ -453,14 +405,6 @@ export function ProductMasterScreen({ data, onUpdate, onBack }: Props) {
 type ProductRowProps = {
   product: PriceData["products"][number];
   categories: string[];
-  draggable?: boolean;
-  dragProps?: {
-    draggable: boolean;
-    onDragStart: () => void;
-    onDragOver: (e: React.DragEvent) => void;
-    onDrop: (e: React.DragEvent) => void;
-    onDragEnd: () => void;
-  };
   onUpdate: (updates: {
     name?: string;
     category?: string;
@@ -469,14 +413,7 @@ type ProductRowProps = {
   onDelete: () => void;
 };
 
-function ProductRow({
-  product,
-  categories,
-  draggable = false,
-  dragProps,
-  onUpdate,
-  onDelete,
-}: ProductRowProps) {
+function ProductRow({ product, categories, onUpdate, onDelete }: ProductRowProps) {
   const [code, setCode] = useState(product.code);
   const [name, setName] = useState(product.name);
   const [category, setCategory] = useState(product.category);
@@ -504,17 +441,7 @@ function ProductRow({
   };
 
   return (
-    <tr
-      className={draggable ? "master-row--draggable" : undefined}
-      {...(dragProps ?? {})}
-    >
-      {draggable && (
-        <td className="col-drag">
-          <span className="drag-handle" aria-hidden="true">
-            ⋮⋮
-          </span>
-        </td>
-      )}
+    <tr>
       <td className="master-code">
         <input
           className="master-field-input"
@@ -556,53 +483,6 @@ function ProductRow({
         </button>
       </td>
     </tr>
-  );
-}
-
-function DraggableProductList({
-  products,
-  getDragProps,
-}: {
-  products: PriceData["products"];
-  getDragProps: (index: number) => {
-    draggable: boolean;
-    onDragStart: () => void;
-    onDragOver: (e: React.DragEvent) => void;
-    onDrop: (e: React.DragEvent) => void;
-    onDragEnd: () => void;
-  };
-}) {
-  return (
-    <div className="master-table-wrap">
-      <table className="master-table master-table--draggable">
-        <thead>
-          <tr>
-            <th className="col-drag" aria-label="並替" />
-            <th>品番</th>
-            <th>品名</th>
-            <th>ジャンル</th>
-          </tr>
-        </thead>
-        <tbody>
-          {products.map((p, index) => (
-            <tr
-              key={p.code}
-              className="master-row--draggable"
-              {...getDragProps(index)}
-            >
-              <td className="col-drag">
-                <span className="drag-handle" aria-hidden="true">
-                  ⋮⋮
-                </span>
-              </td>
-              <td className="master-code">{p.code}</td>
-              <td className="master-name">{p.name}</td>
-              <td className="master-category">{p.category}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
   );
 }
 
