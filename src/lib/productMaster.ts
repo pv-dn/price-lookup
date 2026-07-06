@@ -3,6 +3,12 @@ import {
   guessCategory,
 } from "../constants/productCategories";
 import type { PriceData, Product } from "../types";
+import {
+  appendProductToOrder,
+  mergeProductOrder,
+  removeProductFromOrder,
+  replaceCodeInOrder,
+} from "../utils/productOrder";
 import { getManualCustomers } from "./manualCustomers";
 
 function fallbackCategory(categories: string[]): string {
@@ -29,6 +35,7 @@ export function mergePourVousWithLocal(
     categories,
     products,
     basePrices: existing?.basePrices ?? imported.basePrices ?? [],
+    productOrder: mergeProductOrder(existing, products),
   };
 
   if (!existing) return base;
@@ -139,6 +146,7 @@ function replaceProductCode(
       ...c,
       frequentCodes: c.frequentCodes.map((fc) => (fc === oldCode ? newCode : fc)),
     })),
+    productOrder: replaceCodeInOrder(data.productOrder, oldCode, newCode),
   };
 }
 
@@ -175,6 +183,7 @@ export function addProduct(
         category: normalizeCategory(category, data.categories),
       },
     ],
+    productOrder: appendProductToOrder(data, trimmedCode),
     meta: { ...data.meta, updatedAt: today() },
   };
 }
@@ -236,6 +245,7 @@ export function removeProduct(data: PriceData, code: string): PriceData {
       ...c,
       frequentCodes: c.frequentCodes.filter((fc) => fc !== code),
     })),
+    productOrder: removeProductFromOrder(data.productOrder, code),
     meta: { ...data.meta, updatedAt: today() },
   };
 }

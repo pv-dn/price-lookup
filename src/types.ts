@@ -63,6 +63,8 @@ export type PriceData = {
   /** 全客先共通の基本単価（たたき台） */
   basePrices: BasePriceEntry[];
   prices: PriceEntry[];
+  /** 手動並び替え用の品番順 */
+  productOrder?: string[];
 };
 
 export type Screen =

@@ -1,6 +1,7 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { BasePriceSheetView } from "../components/BasePriceSheetView";
 import { ScreenScrollLayout } from "../components/ScreenScrollLayout";
+import { useDragReorder } from "../hooks/useDragReorder";
 import {
   addCategory,
   addProduct,
@@ -12,6 +13,10 @@ import {
 } from "../lib/productMaster";
 import type { PriceData } from "../types";
 import { formatDate, formatYen, normalizeQuery } from "../utils/format";
+import {
+  initProductOrderFromProducts,
+  reorderDisplayedProducts,
+} from "../utils/productOrder";
 import { sortProducts, type ProductSortBy } from "../utils/sortProducts";
 
 type ViewMode = "list" | "sheet";
@@ -92,8 +97,30 @@ export function BasePricesScreen({
     if (!priceEditMode) {
       list = list.filter((p) => hasDraftPrice(draft, p.code));
     }
-    return sortProducts(list, categories, sortBy);
-  }, [filtered, priceEditMode, draft, categories, sortBy]);
+    return sortProducts(list, categories, sortBy, data.productOrder);
+  }, [filtered, priceEditMode, draft, categories, sortBy, data.productOrder]);
+
+  const handleSortChange = (next: ProductSortBy) => {
+    if (next === "manual" && !data.productOrder?.length) {
+      const current = sortProducts(filtered, categories, sortBy, data.productOrder);
+      onUpdate(initProductOrderFromProducts(data, current));
+    }
+    setSortBy(next);
+  };
+
+  const displayCodes = useMemo(
+    () => displayProducts.map((p) => p.code),
+    [displayProducts],
+  );
+
+  const handleReorder = useCallback(
+    (from: number, to: number) => {
+      onUpdate(reorderDisplayedProducts(data, displayCodes, from, to));
+    },
+    [data, displayCodes, onUpdate],
+  );
+
+  const getDragProps = useDragReorder(handleReorder);
 
   const handleSave = () => {
     if (!draftEffectiveFrom.trim()) {
@@ -283,24 +310,34 @@ export function BasePricesScreen({
           <button
             type="button"
             className={`pm-chip${sortBy === "genre" ? " active" : ""}`}
-            onClick={() => setSortBy("genre")}
+            onClick={() => handleSortChange("genre")}
           >
             ジャンル
           </button>
           <button
             type="button"
             className={`pm-chip${sortBy === "name" ? " active" : ""}`}
-            onClick={() => setSortBy("name")}
+            onClick={() => handleSortChange("name")}
           >
             あいうえお
           </button>
           <button
             type="button"
             className={`pm-chip${sortBy === "code" ? " active" : ""}`}
-            onClick={() => setSortBy("code")}
+            onClick={() => handleSortChange("code")}
           >
             品番
           </button>
+          <button
+            type="button"
+            className={`pm-chip${sortBy === "manual" ? " active" : ""}`}
+            onClick={() => handleSortChange("manual")}
+          >
+            手動
+          </button>
+          {sortBy === "manual" && (
+            <span className="base-sort-hint">リストでドラッグして並替</span>
+          )}
         </div>
 
         {showEditor && (
@@ -471,9 +508,18 @@ export function BasePricesScreen({
             onDeleteProduct={showEditor ? handleDeleteProduct : undefined}
           />
         ) : (
-          <ul className="manual-price-list">
-            {displayProducts.map((product) => (
-              <li key={product.code} className="manual-price-row">
+          <ul className={`manual-price-list${sortBy === "manual" ? " manual-price-list--draggable" : ""}`}>
+            {displayProducts.map((product, index) => (
+              <li
+                key={product.code}
+                className={`manual-price-row${sortBy === "manual" ? " manual-price-row--draggable" : ""}`}
+                {...(sortBy === "manual" ? getDragProps(index) : {})}
+              >
+                {sortBy === "manual" && (
+                  <span className="drag-handle" aria-hidden="true" title="ドラッグで並替">
+                    ⋮⋮
+                  </span>
+                )}
                 <div className="manual-price-info">
                   <span className="list-item-code">{product.code}</span>
                   {showEditor ? (

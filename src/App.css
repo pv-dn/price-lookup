@@ -839,14 +839,6 @@
   flex-wrap: wrap;
 }
 
-.base-sort-row {
-  display: flex;
-  align-items: center;
-  gap: 3px;
-  flex-wrap: wrap;
-  padding: 0 0 8px;
-}
-
 .base-header-title {
   flex: 0 0 auto;
   margin-right: 4px;
@@ -1732,6 +1724,55 @@
 
 .pm-search input::placeholder {
   color: var(--text-tertiary);
+}
+
+.base-sort-row {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  flex-wrap: wrap;
+  padding: 0 0 8px;
+}
+
+.base-sort-hint {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  margin-left: 4px;
+}
+
+.drag-handle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  color: var(--text-tertiary);
+  font-size: 12px;
+  letter-spacing: -2px;
+  cursor: grab;
+  user-select: none;
+  flex-shrink: 0;
+}
+
+.manual-price-row--draggable {
+  cursor: grab;
+}
+
+.manual-price-row--draggable:active {
+  cursor: grabbing;
+}
+
+.master-row--draggable {
+  cursor: grab;
+}
+
+.master-row--draggable:active {
+  cursor: grabbing;
+}
+
+.col-drag {
+  width: 28px;
+  padding: 8px 4px !important;
+  text-align: center;
 }
 
 .pm-sort-toggle {
