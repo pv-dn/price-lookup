@@ -12,6 +12,7 @@ import {
 } from "../lib/productMaster";
 import type { PriceData } from "../types";
 import { formatYen, normalizeQuery } from "../utils/format";
+import { sortProducts, type ProductSortBy } from "../utils/sortProducts";
 
 type ViewMode = "list" | "sheet";
 
@@ -43,6 +44,7 @@ export function BasePricesScreen({
   const [notice, setNotice] = useState<{ text: string; type: "ok" | "err" } | null>(null);
   const [fullscreen, setFullscreen] = useState(false);
   const [priceEditMode, setPriceEditMode] = useState(false);
+  const [sortBy, setSortBy] = useState<ProductSortBy>("genre");
   const [showEditor, setShowEditor] = useState(false);
   const excelRef = useRef<HTMLInputElement>(null);
 
@@ -76,9 +78,12 @@ export function BasePricesScreen({
   }, [products, query]);
 
   const displayProducts = useMemo(() => {
-    if (priceEditMode) return filtered;
-    return filtered.filter((p) => hasDraftPrice(draft, p.code));
-  }, [filtered, priceEditMode, draft]);
+    let list = filtered;
+    if (!priceEditMode) {
+      list = list.filter((p) => hasDraftPrice(draft, p.code));
+    }
+    return sortProducts(list, categories, sortBy);
+  }, [filtered, priceEditMode, draft, categories, sortBy]);
 
   const handleSave = () => {
     const entries: { code: string; price: number }[] = [];
@@ -240,6 +245,31 @@ export function BasePricesScreen({
           </button>
 
           <span className="base-count">{filledCount}件</span>
+        </div>
+
+        <div className="base-sort-row">
+          <span className="pm-sort-label">並替</span>
+          <button
+            type="button"
+            className={`pm-chip${sortBy === "genre" ? " active" : ""}`}
+            onClick={() => setSortBy("genre")}
+          >
+            ジャンル
+          </button>
+          <button
+            type="button"
+            className={`pm-chip${sortBy === "name" ? " active" : ""}`}
+            onClick={() => setSortBy("name")}
+          >
+            あいうえお
+          </button>
+          <button
+            type="button"
+            className={`pm-chip${sortBy === "code" ? " active" : ""}`}
+            onClick={() => setSortBy("code")}
+          >
+            品番
+          </button>
         </div>
 
         {showEditor && (

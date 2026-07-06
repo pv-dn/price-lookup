@@ -830,8 +830,16 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 4px 0 8px;
+  padding: 4px 0 4px;
   flex-wrap: wrap;
+}
+
+.base-sort-row {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  flex-wrap: wrap;
+  padding: 0 0 8px;
 }
 
 .base-header-title {
