@@ -26,7 +26,10 @@ function hasDraftPrice(draft: Map<string, string>, code: string): boolean {
 type Props = {
   data: PriceData;
   onUpdate: (data: PriceData) => void;
-  onSave: (entries: { code: string; price: number }[]) => void;
+  onSave: (
+    entries: { code: string; price: number }[],
+    effectiveFrom: string,
+  ) => void;
   onImportExcel: (file: File) => Promise<string>;
 };
 
@@ -49,6 +52,9 @@ export function BasePricesScreen({
   const excelRef = useRef<HTMLInputElement>(null);
 
   const [draft, setDraft] = useState<Map<string, string>>(() => new Map());
+  const [draftEffectiveFrom, setDraftEffectiveFrom] = useState(
+    () => meta.effectiveFrom || "",
+  );
 
   const [newCode, setNewCode] = useState("");
   const [newName, setNewName] = useState("");
@@ -65,6 +71,10 @@ export function BasePricesScreen({
     }
     setDraft(m);
   }, [basePrices]);
+
+  useEffect(() => {
+    setDraftEffectiveFrom(meta.effectiveFrom || "");
+  }, [meta.effectiveFrom]);
 
   const filtered = useMemo(() => {
     const q = normalizeQuery(query);
@@ -86,12 +96,16 @@ export function BasePricesScreen({
   }, [filtered, priceEditMode, draft, categories, sortBy]);
 
   const handleSave = () => {
+    if (!draftEffectiveFrom.trim()) {
+      setNotice({ text: "適用開始日を入力してください", type: "err" });
+      return;
+    }
     const entries: { code: string; price: number }[] = [];
     for (const [code, raw] of draft) {
       const n = parseInt(raw, 10);
       if (!Number.isNaN(n) && n > 0) entries.push({ code, price: n });
     }
-    onSave(entries);
+    onSave(entries, draftEffectiveFrom.trim());
     setNotice({ text: "基本単価を保存しました", type: "ok" });
   };
 
@@ -164,10 +178,22 @@ export function BasePricesScreen({
             <div className="base-header-title">
               <p className="label">全客先共通</p>
               <h1 className="base-header-name">基本価格表</h1>
-              {!priceEditMode && meta.effectiveFrom && (
-                <p className="base-effective-date">
-                  適用開始日: {formatDate(meta.effectiveFrom)}
-                </p>
+              {priceEditMode ? (
+                <label className="base-effective-date-edit">
+                  <span className="base-effective-date-label">適用開始日</span>
+                  <input
+                    type="date"
+                    className="base-effective-date-input"
+                    value={draftEffectiveFrom}
+                    onChange={(e) => setDraftEffectiveFrom(e.target.value)}
+                  />
+                </label>
+              ) : (
+                meta.effectiveFrom && (
+                  <p className="base-effective-date">
+                    適用開始日: {formatDate(meta.effectiveFrom)}
+                  </p>
+                )
               )}
             </div>
           )}

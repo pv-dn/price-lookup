@@ -222,8 +222,8 @@ function App() {
           <BasePricesScreen
             data={data}
             onUpdate={applyData}
-            onSave={(entries) => {
-              applyData(setBasePrices(data, entries));
+            onSave={(entries, effectiveFrom) => {
+              applyData(setBasePrices(data, entries, effectiveFrom));
             }}
             onImportExcel={async (file) => {
               const buffer = await file.arrayBuffer();

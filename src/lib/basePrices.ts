@@ -1,5 +1,9 @@
 import type { BasePriceEntry, PriceData } from "../types";
 
+function today(): string {
+  return new Date().toISOString().slice(0, 10);
+}
+
 export function getBasePrice(
   data: PriceData,
   code: string,
@@ -10,6 +14,7 @@ export function getBasePrice(
 export function setBasePrices(
   data: PriceData,
   entries: { code: string; price: number }[],
+  effectiveFrom?: string,
 ): PriceData {
   const basePrices: BasePriceEntry[] = entries.map((e) => ({
     code: e.code,
@@ -21,7 +26,8 @@ export function setBasePrices(
     basePrices,
     meta: {
       ...data.meta,
-      updatedAt: new Date().toISOString().slice(0, 10),
+      updatedAt: today(),
+      effectiveFrom: effectiveFrom?.trim() || data.meta.effectiveFrom || today(),
     },
   };
 }
