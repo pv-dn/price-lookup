@@ -8,7 +8,6 @@ import {
   setAppUnlocked,
 } from "../lib/appSession";
 import { loginWithPassword } from "../lib/priceLookupAuth";
-import { clearStoredData } from "../lib/storage";
 
 export function useAuth() {
   const [user, setUser] = useState<User | null>(null);
@@ -40,14 +39,7 @@ export function useAuth() {
     setUnlocked(true);
   }, []);
 
-  const logoutAndClear = useCallback(async () => {
-    clearStoredData();
-    clearAppSession();
-    setUnlocked(false);
-    // signOut は呼ばない（伝票アプリのログイン状態を切らない）
-  }, []);
-
   const isAuthenticated = !!user && unlocked;
 
-  return { user, authReady, isAuthenticated, login, logoutAndClear };
+  return { user, authReady, isAuthenticated, login };
 }

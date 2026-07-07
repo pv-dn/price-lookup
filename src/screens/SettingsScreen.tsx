@@ -14,7 +14,6 @@ type Props = {
   data: PriceData | null;
   onApply: (data: PriceData) => void;
   onResetStored: () => void;
-  onExit: () => void;
   onBack: () => void;
   userEmail: string | null;
   cloudSavedAt: string | null;
@@ -33,7 +32,6 @@ export function SettingsScreen({
   data,
   onApply,
   onResetStored,
-  onExit,
   onBack,
   userEmail,
   cloudSavedAt,
@@ -323,7 +321,7 @@ export function SettingsScreen({
       <section className="settings-section">
         <h2 className="settings-title">セキュリティ</h2>
         <p className="settings-desc">
-          バックアップJSONはメール添付や個人クラウドに置かないでください。「終了」でこの端末のデータは消えますが、クラウド保存済みの価格表データは残り、次回ログインで復元できます。
+          バックアップJSONはメール添付や個人クラウドに置かないでください。編集内容はクラウドに自動保存されます。
         </p>
         <div className="settings-actions-col">
           <button
@@ -331,18 +329,12 @@ export function SettingsScreen({
             className="btn btn-ghost"
             disabled={busy}
             onClick={() => {
-              if (confirm("保存している単価データを消しますか？")) onResetStored();
+              if (confirm("この端末の保存データを消しますか？\nクラウドのデータは残り、次回ログインで復元できます。")) {
+                onResetStored();
+              }
             }}
           >
-            保存データを消す
-          </button>
-          <button
-            type="button"
-            className="btn btn-danger"
-            disabled={busy}
-            onClick={onExit}
-          >
-            データを消して終了
+            この端末のデータを消す
           </button>
         </div>
       </section>

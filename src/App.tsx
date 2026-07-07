@@ -27,7 +27,7 @@ const SOURCE_BADGE: Record<string, string> = {
 };
 
 function App() {
-  const { user, authReady, isAuthenticated, login, logoutAndClear } = useAuth();
+  const { user, authReady, isAuthenticated, login } = useAuth();
   const {
     data,
     error,
@@ -146,14 +146,6 @@ function App() {
   const showMainTabs = mainTabFromScreen(screen) !== null;
   const activeMainTab = mainTabFromScreen(screen) ?? "customers";
 
-  const handleExit = async () => {
-    if (!confirm("データを消して終了しますか？\nこの端末に保存した単価データも削除されます。")) {
-      return;
-    }
-    await logoutAndClear();
-    goCustomers();
-  };
-
   if (!authReady) {
     return (
       <div className="app">
@@ -222,14 +214,6 @@ function App() {
             >
               連携
             </button>
-            <button
-              type="button"
-              className="app-bar-exit"
-              onClick={() => void handleExit()}
-              aria-label="データを消して終了"
-            >
-              終了
-            </button>
           </div>
         </div>
 
@@ -256,7 +240,6 @@ function App() {
               resetStored();
               goCustomers();
             }}
-            onExit={() => void handleExit()}
             onBack={goCustomers}
             userEmail={user?.email ?? null}
             cloudSavedAt={cloudSavedAt}
