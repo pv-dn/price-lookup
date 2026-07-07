@@ -5,7 +5,9 @@ import {
   ProductSheetView,
 } from "../components/ProductViews";
 import { ScreenScrollLayout } from "../components/ScreenScrollLayout";
+import { GenreVisibilityBar } from "../components/GenreVisibilityBar";
 import { ViewModeToggle } from "../components/ViewModeToggle";
+import { useGenreVisibility } from "../hooks/useGenreVisibility";
 import { useViewMode } from "../hooks/useViewMode";
 import type { Customer, PriceEntry, Product } from "../types";
 import { normalizeQuery } from "../utils/format";
@@ -31,6 +33,7 @@ export function SearchScreen({
 }: Props) {
   const [query, setQuery] = useState("");
   const [viewMode, setViewMode] = useViewMode("list");
+  const { hidden, isVisible, toggle, showAll, allVisible } = useGenreVisibility(categories);
 
   const productMap = useMemo(
     () => new Map(products.map((p) => [p.code, p])),
@@ -75,6 +78,7 @@ export function SearchScreen({
     prices,
     categories,
     highlightCodes: showFrequent ? frequentCodes : undefined,
+    hiddenGenres: hidden,
     onSelect: onSelectProduct,
   };
 
@@ -123,6 +127,16 @@ export function SearchScreen({
         </div>
 
         <ViewModeToggle value={viewMode} onChange={setViewMode} />
+
+        {isSheet && (
+          <GenreVisibilityBar
+            categories={categories}
+            isVisible={isVisible}
+            onToggle={toggle}
+            onShowAll={showAll}
+            allVisible={allVisible}
+          />
+        )}
 
         {showFrequent && viewMode !== "list" && viewMode !== "sheet" && (
           <p className="frequent-hint">よく出す品番は薄い青でハイライト</p>

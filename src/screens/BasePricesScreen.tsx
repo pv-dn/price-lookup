@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { BasePriceSheetView } from "../components/BasePriceSheetView";
+import { GenreVisibilityBar } from "../components/GenreVisibilityBar";
 import { ScreenScrollLayout } from "../components/ScreenScrollLayout";
+import { useGenreVisibility } from "../hooks/useGenreVisibility";
 import { useSheetColumnWidths } from "../hooks/useSheetColumnWidths";
 import {
   addCategory,
@@ -120,6 +122,8 @@ export function BasePricesScreen({
 
   const { getWidth: getColumnWidth, startResize: startColumnResize } =
     useSheetColumnWidths();
+
+  const { hidden, isVisible, toggle, showAll, allVisible } = useGenreVisibility(categories);
 
   const sheetBrowseLayout = !priceEditMode && viewMode === "sheet";
 
@@ -341,6 +345,16 @@ export function BasePricesScreen({
           )}
         </div>
 
+        {viewMode === "sheet" && (
+          <GenreVisibilityBar
+            categories={categories}
+            isVisible={isVisible}
+            onToggle={toggle}
+            onShowAll={showAll}
+            allVisible={allVisible}
+          />
+        )}
+
         {showEditor && (
           <div className="base-editor-panel">
             {editorError && <div className="notice notice-err">{editorError}</div>}
@@ -512,6 +526,7 @@ export function BasePricesScreen({
             onSetPrice={setPrice}
             onEditProduct={showEditor ? handleEditProduct : undefined}
             onDeleteProduct={showEditor ? handleDeleteProduct : undefined}
+            hiddenGenres={hidden}
           />
         ) : (
           <ul className="manual-price-list">

@@ -2,10 +2,11 @@
 $ErrorActionPreference = 'Stop'
 $AppName = 'ホワイト事業部価格表'
 $AppUrl = 'https://pv-dn.github.io/price-lookup/'
-$IconPath = Join-Path $PSScriptRoot 'public\icons\desktop.ico'
+$IconPath = (Resolve-Path (Join-Path $PSScriptRoot 'public\icons\desktop.ico')).Path
 
+python (Join-Path $PSScriptRoot 'icons\make-icons.py') | Out-Null
 if (-not (Test-Path $IconPath)) {
-    python (Join-Path $PSScriptRoot 'icons\make-icons.py') | Out-Null
+    throw "アイコンファイルが見つかりません: $IconPath"
 }
 
 $DesktopDir = Join-Path $env:USERPROFILE 'Desktop'
@@ -25,6 +26,10 @@ if (Test-Path $chrome) {
     throw 'Chrome または Edge が見つかりません'
 }
 
+if (Test-Path $ShortcutPath) {
+    Remove-Item $ShortcutPath -Force
+}
+
 $WshShell = New-Object -ComObject WScript.Shell
 $Shortcut = $WshShell.CreateShortcut($ShortcutPath)
 $Shortcut.TargetPath = $target
@@ -35,3 +40,4 @@ $Shortcut.WorkingDirectory = $PSScriptRoot
 $Shortcut.Save()
 
 Write-Host "Created: $ShortcutPath"
+Write-Host "Icon: $IconPath"

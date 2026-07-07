@@ -22,6 +22,7 @@ type Props = {
   onSetPrice: (code: string, value: string) => void;
   onEditProduct?: (code: string, updates: { name?: string; category?: string }) => void;
   onDeleteProduct?: (code: string, name: string) => void;
+  hiddenGenres?: Set<string>;
 };
 
 export function BasePriceSheetView({
@@ -37,8 +38,19 @@ export function BasePriceSheetView({
   onSetPrice,
   onEditProduct,
   onDeleteProduct,
+  hiddenGenres,
 }: Props) {
-  const groups = groupProductsByCategory(products, categories);
+  const groups = groupProductsByCategory(products, categories).filter(
+    (group) => !hiddenGenres?.has(group.label),
+  );
+
+  if (groups.length === 0) {
+    return (
+      <p className="genre-visibility-empty">
+        表示するジャンルを選んでください。「表示」のチップをタップして切り替えられます。
+      </p>
+    );
+  }
 
   return (
     <div className="sheet-grid">

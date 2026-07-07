@@ -8,6 +8,7 @@ export type ProductViewProps = {
   prices: PriceEntry[];
   categories?: string[];
   highlightCodes?: Set<string>;
+  hiddenGenres?: Set<string>;
   onSelect: (code: string) => void;
 };
 
@@ -67,9 +68,20 @@ export function ProductSheetView({
   prices,
   categories = [],
   highlightCodes,
+  hiddenGenres,
   onSelect,
 }: ProductViewProps) {
-  const groups = groupProductsByCategory(products, categories);
+  const groups = groupProductsByCategory(products, categories).filter(
+    (group) => !hiddenGenres?.has(group.label),
+  );
+
+  if (groups.length === 0) {
+    return (
+      <p className="genre-visibility-empty">
+        表示するジャンルを選んでください。「表示」のチップをタップして切り替えられます。
+      </p>
+    );
+  }
 
   return (
     <div className="sheet-grid">
