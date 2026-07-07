@@ -37,7 +37,16 @@ function createEmptyData(): PriceData {
 }
 
 function normalizeLoaded(data: PriceData): PriceData {
-  const normalized = ensureProductCategories(data);
+  const cleaned: PriceData = {
+    ...data,
+    meta: {
+      ...data.meta,
+      revisionName: data.meta.revisionName
+        .replace(/（基本単価は客先単価から推定）/g, "")
+        .trim(),
+    },
+  };
+  const normalized = ensureProductCategories(cleaned);
   const withBase = withDerivedBasePricesIfEmpty(normalized);
   if (withBase.basePrices.length > normalized.basePrices.length) {
     return withBase;

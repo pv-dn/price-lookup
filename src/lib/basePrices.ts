@@ -83,9 +83,5 @@ export function withDerivedBasePricesIfEmpty(data: PriceData): PriceData {
   return {
     ...data,
     basePrices,
-    meta: {
-      ...data.meta,
-      revisionName: `${data.meta.revisionName}（基本単価は客先単価から推定）`,
-    },
   };
 }

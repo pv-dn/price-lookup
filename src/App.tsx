@@ -203,9 +203,6 @@ function App() {
             {sourceBadge && (
               <span className="app-bar-badge app-bar-badge-source">{sourceBadge}</span>
             )}
-            {data.meta.revisionName && (
-              <span className="app-bar-badge">{data.meta.revisionName}</span>
-            )}
             <button
               type="button"
               className="app-bar-settings"
