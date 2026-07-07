@@ -1,43 +1,4 @@
 # ホワイト事業部価格表 — デスクトップショートカット（¥アイコン）
 $ErrorActionPreference = 'Stop'
-$AppName = 'ホワイト事業部価格表'
-$AppUrl = 'https://pv-dn.github.io/price-lookup/'
-$IconPath = (Resolve-Path (Join-Path $PSScriptRoot 'public\icons\desktop.ico')).Path
-
-python (Join-Path $PSScriptRoot 'icons\make-icons.py') | Out-Null
-if (-not (Test-Path $IconPath)) {
-    throw "アイコンファイルが見つかりません: $IconPath"
-}
-
-$DesktopDir = Join-Path $env:USERPROFILE 'Desktop'
-if (-not (Test-Path $DesktopDir)) {
-    $DesktopDir = Join-Path $env:USERPROFILE 'OneDrive\Desktop'
-}
-
-$ShortcutPath = Join-Path $DesktopDir "$AppName.lnk"
-
-$chrome = "$env:ProgramFiles\Google\Chrome\Application\chrome.exe"
-$edge = "$env:ProgramFiles (x86)\Microsoft\Edge\Application\msedge.exe"
-if (Test-Path $chrome) {
-    $target = $chrome
-} elseif (Test-Path $edge) {
-    $target = $edge
-} else {
-    throw 'Chrome または Edge が見つかりません'
-}
-
-if (Test-Path $ShortcutPath) {
-    Remove-Item $ShortcutPath -Force
-}
-
-$WshShell = New-Object -ComObject WScript.Shell
-$Shortcut = $WshShell.CreateShortcut($ShortcutPath)
-$Shortcut.TargetPath = $target
-$Shortcut.Arguments = "--app=$AppUrl"
-$Shortcut.IconLocation = "$IconPath,0"
-$Shortcut.Description = $AppName
-$Shortcut.WorkingDirectory = $PSScriptRoot
-$Shortcut.Save()
-
-Write-Host "Created: $ShortcutPath"
-Write-Host "Icon: $IconPath"
+python (Join-Path $PSScriptRoot 'install-desktop-shortcut.py')
+if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
