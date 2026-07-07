@@ -120,6 +120,11 @@ export function CustomerScreen({ customers, onSelect, onAdd }: Props) {
         </>
       }
     >
+        {customers.length === 0 ? (
+          <p className="empty-hint">
+            データがまだありません。右上の「連携」から Excel・JSON 取込、または Firestore 同期を行ってください。
+          </p>
+        ) : (
         <ul className="list">
           {filtered.map((customer) => (
             <li key={customer.id}>
@@ -141,6 +146,7 @@ export function CustomerScreen({ customers, onSelect, onAdd }: Props) {
             </li>
           ))}
         </ul>
+        )}
     </ScreenScrollLayout>
   );
 }

@@ -5,7 +5,6 @@ import { getManualCustomers, removeManualCustomer } from "../lib/manualCustomers
 import { mergePourVousWithLocal } from "../lib/productMaster";
 import { readPriceSheetExcelFile } from "../lib/parsePriceSheetExcel";
 import { loadFromFirestore } from "../lib/pourvousFirestore";
-import { useAuth } from "../hooks/useAuth";
 import { defaultCategories } from "../constants/productCategories";
 import { ensureProductCategories } from "../lib/productMaster";
 import type { PriceData } from "../types";
@@ -13,25 +12,31 @@ import type { PriceData } from "../types";
 type Props = {
   data: PriceData | null;
   onApply: (data: PriceData) => void;
-  onResetSample: () => void;
+  onResetStored: () => void;
+  onExit: () => void;
   onBack: () => void;
+  userEmail: string | null;
 };
 
 const SOURCE_LABELS: Record<string, string> = {
-  sample: "サンプルデータ",
+  none: "未取込",
   import: "JSON取込",
   firestore: "Firestore同期",
   excel: "価格表Excel",
 };
 
-export function SettingsScreen({ data, onApply, onResetSample, onBack }: Props) {
-  const { user, authReady, login, logout } = useAuth();
+export function SettingsScreen({
+  data,
+  onApply,
+  onResetStored,
+  onExit,
+  onBack,
+  userEmail,
+}: Props) {
   const fileRef = useRef<HTMLInputElement>(null);
   const excelRef = useRef<HTMLInputElement>(null);
   const [message, setMessage] = useState<{ text: string; type: "ok" | "err" } | null>(null);
   const [busy, setBusy] = useState(false);
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
 
   const showMsg = (text: string, type: "ok" | "err") => {
     setMessage({ text, type });
@@ -88,10 +93,6 @@ export function SettingsScreen({ data, onApply, onResetSample, onBack }: Props) 
   };
 
   const handleFirestoreSync = async () => {
-    if (!user) {
-      showMsg("先にログインしてください", "err");
-      return;
-    }
     setBusy(true);
     setMessage(null);
     try {
@@ -110,21 +111,7 @@ export function SettingsScreen({ data, onApply, onResetSample, onBack }: Props) 
     }
   };
 
-  const handleLogin = async () => {
-    setBusy(true);
-    setMessage(null);
-    try {
-      await login(email.trim(), password);
-      showMsg("ログインしました", "ok");
-      setPassword("");
-    } catch {
-      showMsg("ログインに失敗しました。伝票アプリと同じアカウントを使ってください。", "err");
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  const source = data?.meta.source ?? "sample";
+  const source = data?.meta.source ?? "none";
   const manualCustomers = data ? getManualCustomers(data) : [];
 
   const handleDeleteManual = (id: string, name: string) => {
@@ -225,61 +212,17 @@ export function SettingsScreen({ data, onApply, onResetSample, onBack }: Props) 
       <section className="settings-section">
         <h2 className="settings-title">③ Firestore同期</h2>
         <p className="settings-desc">
-          伝票アプリと同じFirebaseアカウントでログインし、最新データを取得します。
+          伝票アプリと同じクラウドデータから最新の品番・単価を取得します。
         </p>
-
-        {!authReady ? (
-          <p className="settings-desc">認証を確認中…</p>
-        ) : user ? (
-          <div className="settings-auth">
-            <p className="settings-logged-in">ログイン中: {user.email}</p>
-            <div className="settings-actions-row">
-              <button
-                type="button"
-                className="btn btn-primary"
-                disabled={busy}
-                onClick={handleFirestoreSync}
-              >
-                最新データを同期
-              </button>
-              <button
-                type="button"
-                className="btn btn-ghost"
-                disabled={busy}
-                onClick={() => logout()}
-              >
-                ログアウト
-              </button>
-            </div>
-          </div>
-        ) : (
-          <div className="settings-login">
-            <input
-              type="email"
-              className="settings-input"
-              placeholder="メールアドレス"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              autoComplete="username"
-            />
-            <input
-              type="password"
-              className="settings-input"
-              placeholder="パスワード"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              autoComplete="current-password"
-            />
-            <button
-              type="button"
-              className="btn btn-primary"
-              disabled={busy || !email || !password}
-              onClick={handleLogin}
-            >
-              ログイン
-            </button>
-          </div>
-        )}
+        {userEmail && <p className="settings-logged-in">ログイン中: {userEmail}</p>}
+        <button
+          type="button"
+          className="btn btn-primary"
+          disabled={busy}
+          onClick={handleFirestoreSync}
+        >
+          最新データを同期
+        </button>
       </section>
 
       {manualCustomers.length > 0 && (
@@ -311,17 +254,30 @@ export function SettingsScreen({ data, onApply, onResetSample, onBack }: Props) 
       )}
 
       <section className="settings-section">
-        <h2 className="settings-title">その他</h2>
-        <button
-          type="button"
-          className="btn btn-ghost"
-          disabled={busy}
-          onClick={() => {
-            if (confirm("サンプルデータに戻しますか？")) onResetSample();
-          }}
-        >
-          サンプルデータに戻す
-        </button>
+        <h2 className="settings-title">セキュリティ</h2>
+        <p className="settings-desc">
+          バックアップJSONはメール添付や個人クラウドに置かないでください。この端末から単価データを消すときは「データを消して終了」を使います。
+        </p>
+        <div className="settings-actions-col">
+          <button
+            type="button"
+            className="btn btn-ghost"
+            disabled={busy}
+            onClick={() => {
+              if (confirm("保存している単価データを消しますか？")) onResetStored();
+            }}
+          >
+            保存データを消す
+          </button>
+          <button
+            type="button"
+            className="btn btn-danger"
+            disabled={busy}
+            onClick={onExit}
+          >
+            データを消して終了
+          </button>
+        </div>
       </section>
 
       {message && (

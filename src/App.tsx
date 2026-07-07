@@ -3,6 +3,7 @@ import { MainTabBar, mainTabFromScreen } from "./components/MainTabBar";
 import type { MainTab } from "./components/MainTabBar";
 import { ZoomControls } from "./components/ZoomControls";
 import { useScreenZoom } from "./hooks/useScreenZoom";
+import { useAuth } from "./hooks/useAuth";
 import { usePriceData } from "./hooks/usePriceData";
 import { addManualCustomer, setManualPrices } from "./lib/manualCustomers";
 import { setBasePrices } from "./lib/basePrices";
@@ -10,6 +11,7 @@ import { mergeBasePriceSheetExcelResult } from "./lib/mergeBasePriceSheetExcel";
 import { readBasePriceSheetExcelFile } from "./lib/parsePriceSheetExcel";
 import { BasePricesScreen } from "./screens/BasePricesScreen";
 import { CustomerScreen } from "./screens/CustomerScreen";
+import { LoginScreen } from "./screens/LoginScreen";
 import { ManualPricesScreen } from "./screens/ManualPricesScreen";
 import { ProductMasterScreen } from "./screens/ProductMasterScreen";
 import { PriceScreen } from "./screens/PriceScreen";
@@ -19,14 +21,14 @@ import type { Screen } from "./types";
 import "./App.css";
 
 const SOURCE_BADGE: Record<string, string> = {
-  sample: "サンプル",
   import: "JSON",
   firestore: "同期",
   excel: "Excel",
 };
 
 function App() {
-  const { data, error, loading, applyData, resetToSample } = usePriceData();
+  const { user, authReady, login, logoutAndClear } = useAuth();
+  const { data, error, loading, applyData, resetStored } = usePriceData(!!user);
   const [screen, setScreen] = useState<Screen>("customers");
   const [customerId, setCustomerId] = useState<string | null>(null);
   const [productCode, setProductCode] = useState<string | null>(null);
@@ -134,6 +136,26 @@ function App() {
   const showMainTabs = mainTabFromScreen(screen) !== null;
   const activeMainTab = mainTabFromScreen(screen) ?? "customers";
 
+  const handleExit = async () => {
+    if (!confirm("データを消して終了しますか？\nこの端末に保存した単価データも削除されます。")) {
+      return;
+    }
+    await logoutAndClear();
+    goCustomers();
+  };
+
+  if (!authReady) {
+    return (
+      <div className="app">
+        <div className="status-message">読み込み中…</div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <LoginScreen onLogin={login} />;
+  }
+
   if (loading) {
     return (
       <div className="app">
@@ -188,6 +210,14 @@ function App() {
             >
               連携
             </button>
+            <button
+              type="button"
+              className="app-bar-exit"
+              onClick={() => void handleExit()}
+              aria-label="データを消して終了"
+            >
+              終了
+            </button>
           </div>
         </div>
 
@@ -210,11 +240,13 @@ function App() {
               applyData(d);
               goCustomers();
             }}
-            onResetSample={() => {
-              resetToSample();
+            onResetStored={() => {
+              resetStored();
               goCustomers();
             }}
+            onExit={() => void handleExit()}
             onBack={goCustomers}
+            userEmail={user.email}
           />
         )}
 
