@@ -38,3 +38,54 @@ export function basePriceEntriesForCustomer(
 ): { code: string; price: number }[] {
   return data.basePrices.map((p) => ({ code: p.code, price: p.price }));
 }
+
+/** 客先別単価の最頻値から基本単価を推定（復元用） */
+export function deriveBasePricesFromCustomerPrices(
+  data: PriceData,
+): BasePriceEntry[] {
+  const byCode = new Map<string, number[]>();
+  for (const entry of data.prices) {
+    if (!Number.isFinite(entry.price) || entry.price <= 0) continue;
+    const list = byCode.get(entry.code) ?? [];
+    list.push(entry.price);
+    byCode.set(entry.code, list);
+  }
+
+  const basePrices: BasePriceEntry[] = [];
+  for (const product of data.products) {
+    const values = byCode.get(product.code);
+    if (!values?.length) continue;
+
+    const freq = new Map<number, number>();
+    for (const price of values) {
+      freq.set(price, (freq.get(price) ?? 0) + 1);
+    }
+    let bestPrice = values[0];
+    let bestCount = 0;
+    for (const [price, count] of freq) {
+      if (count > bestCount) {
+        bestPrice = price;
+        bestCount = count;
+      }
+    }
+    basePrices.push({ code: product.code, price: bestPrice });
+  }
+
+  return basePrices;
+}
+
+export function withDerivedBasePricesIfEmpty(data: PriceData): PriceData {
+  if (data.basePrices.length > 0 || data.prices.length === 0) return data;
+
+  const basePrices = deriveBasePricesFromCustomerPrices(data);
+  if (basePrices.length === 0) return data;
+
+  return {
+    ...data,
+    basePrices,
+    meta: {
+      ...data.meta,
+      revisionName: `${data.meta.revisionName}（基本単価は客先単価から推定）`,
+    },
+  };
+}

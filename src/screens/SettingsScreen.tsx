@@ -1,5 +1,6 @@
 import { useRef, useState } from "react";
 import { convertPourVousBackup, validatePourVousBackup } from "../lib/convertPourVous";
+import { withDerivedBasePricesIfEmpty } from "../lib/basePrices";
 import { mergePriceSheetExcelResult } from "../lib/mergePriceSheetExcel";
 import { getManualCustomers, removeManualCustomer } from "../lib/manualCustomers";
 import { mergePourVousWithLocal } from "../lib/productMaster";
@@ -52,7 +53,9 @@ export function SettingsScreen({
         throw new Error("プゥルヴー伝票のバックアップJSONではありません");
       }
       const converted = convertPourVousBackup(parsed, "import");
-      const merged = mergePourVousWithLocal(converted, data);
+      const merged = withDerivedBasePricesIfEmpty(
+        mergePourVousWithLocal(converted, data),
+      );
       onApply(merged);
       const manualKept = getManualCustomers(merged).length;
       showMsg(
@@ -97,7 +100,9 @@ export function SettingsScreen({
     setMessage(null);
     try {
       const converted = await loadFromFirestore();
-      const merged = mergePourVousWithLocal(converted, data);
+      const merged = withDerivedBasePricesIfEmpty(
+        mergePourVousWithLocal(converted, data),
+      );
       onApply(merged);
       const manualKept = getManualCustomers(merged).length;
       showMsg(
@@ -165,6 +170,25 @@ export function SettingsScreen({
             </div>
           )}
         </dl>
+        {data && data.basePrices.length === 0 && data.prices.length > 0 && (
+          <div className="settings-actions-col" style={{ marginTop: "0.75rem" }}>
+            <button
+              type="button"
+              className="btn btn-secondary"
+              disabled={busy}
+              onClick={() => {
+                const restored = withDerivedBasePricesIfEmpty(data);
+                onApply(restored);
+                showMsg(
+                  `基本単価を${restored.basePrices.length}件推定しました（基本価格表タブで確認・修正できます）`,
+                  "ok",
+                );
+              }}
+            >
+              客先単価から基本単価を推定
+            </button>
+          </div>
+        )}
       </div>
 
       <section className="settings-section">

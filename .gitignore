@@ -22,3 +22,6 @@ Thumbs.db
 # Firebase / env
 .env
 .env.*
+
+# Local restore output (company data)
+restore/

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { defaultCategories } from "../constants/productCategories";
 import type { PriceData } from "../types";
 import { ensureProductCategories } from "../lib/productMaster";
+import { withDerivedBasePricesIfEmpty } from "../lib/basePrices";
 import { loadFromFirestore } from "../lib/pourvousFirestore";
 import { clearStoredData, loadStoredData, saveStoredData } from "../lib/storage";
 
@@ -56,9 +57,11 @@ export function usePriceData(authenticated: boolean) {
       setRestoring(true);
       try {
         const fromCloud = await loadFromFirestore();
-        const normalized = ensureProductCategories(fromCloud);
-        saveStoredData(normalized);
-        setData(normalized);
+        const restored = withDerivedBasePricesIfEmpty(
+          ensureProductCategories(fromCloud),
+        );
+        saveStoredData(restored);
+        setData(restored);
         return;
       } catch {
         /* localStorage が空のときだけクラウド復元を試す */
