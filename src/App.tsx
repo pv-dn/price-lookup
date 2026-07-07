@@ -28,7 +28,7 @@ const SOURCE_BADGE: Record<string, string> = {
 
 function App() {
   const { user, authReady, isAuthenticated, login, logoutAndClear } = useAuth();
-  const { data, error, loading, applyData, resetStored } = usePriceData(isAuthenticated);
+  const { data, error, loading, restoring, applyData, resetStored } = usePriceData(isAuthenticated);
   const [screen, setScreen] = useState<Screen>("customers");
   const [customerId, setCustomerId] = useState<string | null>(null);
   const [productCode, setProductCode] = useState<string | null>(null);
@@ -159,7 +159,9 @@ function App() {
   if (loading) {
     return (
       <div className="app">
-        <div className="status-message">読み込み中…</div>
+        <div className="status-message">
+          {restoring ? "クラウドからデータを復元中…" : "読み込み中…"}
+        </div>
       </div>
     );
   }

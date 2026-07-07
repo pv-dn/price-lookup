@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { defaultCategories } from "../constants/productCategories";
 import type { PriceData } from "../types";
 import { ensureProductCategories } from "../lib/productMaster";
+import { loadFromFirestore } from "../lib/pourvousFirestore";
 import { clearStoredData, loadStoredData, saveStoredData } from "../lib/storage";
 
 function today(): string {
@@ -28,6 +29,7 @@ export function usePriceData(authenticated: boolean) {
   const [data, setData] = useState<PriceData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [restoring, setRestoring] = useState(false);
 
   const applyData = useCallback((newData: PriceData) => {
     const normalized = ensureProductCategories(newData);
@@ -50,6 +52,20 @@ export function usePriceData(authenticated: boolean) {
         setData(ensureProductCategories(stored));
         return;
       }
+
+      setRestoring(true);
+      try {
+        const fromCloud = await loadFromFirestore();
+        const normalized = ensureProductCategories(fromCloud);
+        saveStoredData(normalized);
+        setData(normalized);
+        return;
+      } catch {
+        /* localStorage が空のときだけクラウド復元を試す */
+      } finally {
+        setRestoring(false);
+      }
+
       setData(ensureProductCategories(createEmptyData()));
     } catch (e) {
       setError(e instanceof Error ? e.message : "不明なエラー");
@@ -81,5 +97,5 @@ export function usePriceData(authenticated: boolean) {
     void loadInitial();
   }, [authenticated, loadInitial]);
 
-  return { data, error, loading, applyData, resetStored, reload: loadInitial };
+  return { data, error, loading, restoring, applyData, resetStored, reload: loadInitial };
 }
