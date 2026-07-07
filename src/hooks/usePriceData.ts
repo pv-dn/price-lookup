@@ -50,7 +50,12 @@ export function usePriceData(authenticated: boolean) {
     try {
       const stored = loadStoredData();
       if (stored) {
-        setData(ensureProductCategories(stored));
+        const normalized = ensureProductCategories(stored);
+        const withBase = withDerivedBasePricesIfEmpty(normalized);
+        if (withBase.basePrices.length > normalized.basePrices.length) {
+          saveStoredData(withBase);
+        }
+        setData(withBase);
         return;
       }
 

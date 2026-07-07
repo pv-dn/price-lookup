@@ -47,7 +47,9 @@ export function BasePriceSheetView({
   if (groups.length === 0) {
     return (
       <p className="genre-visibility-empty">
-        表示するジャンルを選んでください。「表示」のチップをタップして切り替えられます。
+        {products.length === 0
+          ? "品目がありません。右上の「連携」からデータを取り込んでください。"
+          : "表示するジャンルを選んでください。「表示」のチップをタップして切り替えられます。"}
       </p>
     );
   }

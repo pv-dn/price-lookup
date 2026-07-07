@@ -53,7 +53,9 @@ export function BasePricesScreen({
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState<{ text: string; type: "ok" | "err" } | null>(null);
   const [fullscreen, setFullscreen] = useState(false);
-  const [priceEditMode, setPriceEditMode] = useState(false);
+  const [priceEditMode, setPriceEditMode] = useState(
+    () => data.basePrices.length === 0,
+  );
   const [sortBy, setSortBy] = useState<ProductSortBy>("genre");
   const [showEditor, setShowEditor] = useState(false);
   const excelRef = useRef<HTMLInputElement>(null);
@@ -96,11 +98,11 @@ export function BasePricesScreen({
 
   const displayProducts = useMemo(() => {
     let list = filtered;
-    if (!priceEditMode) {
+    if (!priceEditMode && data.basePrices.length > 0) {
       list = list.filter((p) => hasDraftPrice(draft, p.code));
     }
     return sortProducts(list, categories, sortBy, data.productOrder);
-  }, [filtered, priceEditMode, draft, categories, sortBy, data.productOrder]);
+  }, [filtered, priceEditMode, draft, categories, sortBy, data.productOrder, data.basePrices.length]);
 
   const handleSortChange = (next: ProductSortBy) => {
     if (next === "manual" && !data.productOrder?.length) {
