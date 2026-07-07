@@ -6,7 +6,7 @@ function isAuthError(error: unknown): error is AuthError {
   return typeof error === "object" && error !== null && "code" in error;
 }
 
-export async function loginWithPourVousPassword(password: string): Promise<void> {
+export async function loginWithPassword(password: string): Promise<void> {
   const trimmed = password.trim();
   if (!trimmed) {
     throw new Error("パスワードを入力してください");

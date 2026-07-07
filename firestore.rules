@@ -6,7 +6,7 @@ service cloud.firestore {
       allow read, write: if request.auth != null;
     }
 
-    // 伝票アプリのパスワードログイン用（shortId 一覧の取得）
+    // ログイン用ユーザープロフィール（shortId 一覧の取得）
     match /userProfiles/{userId} {
       allow read: if true;
       allow write: if request.auth != null;

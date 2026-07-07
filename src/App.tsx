@@ -27,8 +27,8 @@ const SOURCE_BADGE: Record<string, string> = {
 };
 
 function App() {
-  const { user, authReady, login, logoutAndClear } = useAuth();
-  const { data, error, loading, applyData, resetStored } = usePriceData(!!user);
+  const { user, authReady, isAuthenticated, login, logoutAndClear } = useAuth();
+  const { data, error, loading, applyData, resetStored } = usePriceData(isAuthenticated);
   const [screen, setScreen] = useState<Screen>("customers");
   const [customerId, setCustomerId] = useState<string | null>(null);
   const [productCode, setProductCode] = useState<string | null>(null);
@@ -152,7 +152,7 @@ function App() {
     );
   }
 
-  if (!user) {
+  if (!isAuthenticated) {
     return <LoginScreen onLogin={login} />;
   }
 
@@ -246,7 +246,7 @@ function App() {
             }}
             onExit={() => void handleExit()}
             onBack={goCustomers}
-            userEmail={user.email}
+            userEmail={user?.email ?? null}
           />
         )}
 

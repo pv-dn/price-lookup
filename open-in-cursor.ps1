@@ -1,4 +1,4 @@
-# Open price-lookup app in a dedicated Cursor window (not mixed with Shift Board).
+# Open price-lookup in its own Cursor window (not mixed with 伝票 / Shift Board / etc.).
 $ErrorActionPreference = 'Stop'
 
 $Workspace = Join-Path $PSScriptRoot '..\Cursor用\workspaces\価格参照.code-workspace'

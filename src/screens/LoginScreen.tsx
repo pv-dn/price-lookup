@@ -27,7 +27,7 @@ export function LoginScreen({ onLogin }: Props) {
       <div className="login-box">
         <p className="login-label">株式会社プゥル・ヴー</p>
         <h1 className="login-title">ホワイト事業部価格表</h1>
-        <p className="login-subtitle">伝票アプリと同じパスワードでログイン</p>
+        <p className="login-subtitle">社内用パスワードを入力してください</p>
 
         <label className="login-field">
           <span className="login-field-label">パスワード</span>
