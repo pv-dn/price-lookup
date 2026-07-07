@@ -17,6 +17,9 @@ type Props = {
   onExit: () => void;
   onBack: () => void;
   userEmail: string | null;
+  cloudSavedAt: string | null;
+  savingCloud: boolean;
+  onSaveToCloud: () => Promise<void>;
 };
 
 const SOURCE_LABELS: Record<string, string> = {
@@ -33,6 +36,9 @@ export function SettingsScreen({
   onExit,
   onBack,
   userEmail,
+  cloudSavedAt,
+  savingCloud,
+  onSaveToCloud,
 }: Props) {
   const fileRef = useRef<HTMLInputElement>(null);
   const excelRef = useRef<HTMLInputElement>(null);
@@ -278,9 +284,46 @@ export function SettingsScreen({
       )}
 
       <section className="settings-section">
+        <h2 className="settings-title">価格表データのクラウド保存</h2>
+        <p className="settings-desc">
+          ジャンル編集・基本価格表・手入力の客先など、価格表アプリ独自の編集内容を Firebase に保存します。保存・編集のあと自動で同期されます（ログイン中のユーザーごと）。
+        </p>
+        {cloudSavedAt ? (
+          <p className="settings-logged-in">
+            最終クラウド保存: {new Date(cloudSavedAt).toLocaleString("ja-JP")}
+          </p>
+        ) : (
+          <p className="settings-desc">まだクラウドに保存されていません。</p>
+        )}
+        <button
+          type="button"
+          className="btn btn-secondary"
+          disabled={busy || savingCloud || !data}
+          onClick={() => {
+            void (async () => {
+              setBusy(true);
+              try {
+                await onSaveToCloud();
+                showMsg("クラウドに保存しました", "ok");
+              } catch (e) {
+                showMsg(
+                  e instanceof Error ? e.message : "クラウド保存に失敗しました",
+                  "err",
+                );
+              } finally {
+                setBusy(false);
+              }
+            })();
+          }}
+        >
+          {savingCloud ? "クラウド保存中…" : "今すぐクラウドに保存"}
+        </button>
+      </section>
+
+      <section className="settings-section">
         <h2 className="settings-title">セキュリティ</h2>
         <p className="settings-desc">
-          バックアップJSONはメール添付や個人クラウドに置かないでください。この端末から単価データを消すときは「データを消して終了」を使います。
+          バックアップJSONはメール添付や個人クラウドに置かないでください。「終了」でこの端末のデータは消えますが、クラウド保存済みの価格表データは残り、次回ログインで復元できます。
         </p>
         <div className="settings-actions-col">
           <button

@@ -140,7 +140,7 @@ export function BasePricesScreen({
       if (!Number.isNaN(n) && n > 0) entries.push({ code, price: n });
     }
     onSave(entries, draftEffectiveFrom.trim());
-    setNotice({ text: "基本単価を保存しました", type: "ok" });
+    setNotice({ text: "基本単価を保存しました（クラウドにも同期します）", type: "ok" });
   };
 
   const setPrice = (code: string, value: string) => {

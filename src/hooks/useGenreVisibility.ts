@@ -1,24 +1,24 @@
-import { useCallback, useEffect, useState } from "react";
-
-const STORAGE_KEY = "price-lookup-hidden-genres";
-
-function loadHidden(): Set<string> {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) return new Set(JSON.parse(raw) as string[]);
-  } catch {
-    /* ignore */
-  }
-  return new Set();
-}
+import { useCallback, useEffect, useRef, useState } from "react";
+import { loadHiddenGenres, saveHiddenGenres } from "../lib/genreVisibilityStorage";
+import { triggerCloudBackup } from "../lib/priceLookupCloudRegistry";
 
 export function useGenreVisibility(categories: string[]) {
-  const [hidden, setHidden] = useState<Set<string>>(loadHidden);
+  const [hidden, setHidden] = useState<Set<string>>(() => new Set(loadHiddenGenres()));
+  const prefsTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify([...hidden]));
-  }, [hidden]);
+    return () => {
+      if (prefsTimerRef.current) clearTimeout(prefsTimerRef.current);
+    };
+  }, []);
 
+  useEffect(() => {
+    saveHiddenGenres([...hidden]);
+    if (prefsTimerRef.current) clearTimeout(prefsTimerRef.current);
+    prefsTimerRef.current = setTimeout(() => {
+      triggerCloudBackup();
+    }, 1500);
+  }, [hidden]);
   useEffect(() => {
     setHidden((prev) => {
       const next = new Set([...prev].filter((label) => categories.includes(label)));

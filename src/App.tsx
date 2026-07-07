@@ -28,7 +28,17 @@ const SOURCE_BADGE: Record<string, string> = {
 
 function App() {
   const { user, authReady, isAuthenticated, login, logoutAndClear } = useAuth();
-  const { data, error, loading, restoring, applyData, resetStored } = usePriceData(isAuthenticated);
+  const {
+    data,
+    error,
+    loading,
+    restoring,
+    cloudSavedAt,
+    savingCloud,
+    applyData,
+    resetStored,
+    saveToCloudNow,
+  } = usePriceData(isAuthenticated, user?.uid ?? null);
   const [screen, setScreen] = useState<Screen>("customers");
   const [customerId, setCustomerId] = useState<string | null>(null);
   const [productCode, setProductCode] = useState<string | null>(null);
@@ -249,6 +259,9 @@ function App() {
             onExit={() => void handleExit()}
             onBack={goCustomers}
             userEmail={user?.email ?? null}
+            cloudSavedAt={cloudSavedAt}
+            savingCloud={savingCloud}
+            onSaveToCloud={saveToCloudNow}
           />
         )}
 

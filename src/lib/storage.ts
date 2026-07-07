@@ -2,7 +2,7 @@ import type { PriceData } from "../types";
 
 const STORAGE_KEY = "price-lookup-data";
 
-function isPriceData(value: unknown): value is PriceData {
+export function validatePriceData(value: unknown): value is PriceData {
   if (!value || typeof value !== "object") return false;
   const v = value as Record<string, unknown>;
   return (
@@ -16,13 +16,16 @@ function isPriceData(value: unknown): value is PriceData {
   );
 }
 
+function isPriceData(value: unknown): value is PriceData {
+  return validatePriceData(value);
+}
+
 export function loadStoredData(): PriceData | null {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return null;
     const parsed: unknown = JSON.parse(raw);
     if (!isPriceData(parsed)) {
-      localStorage.removeItem(STORAGE_KEY);
       return null;
     }
     return parsed;
