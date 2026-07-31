@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { defaultCategories } from "../constants/productCategories";
 import type { PriceData } from "../types";
-import { withDerivedBasePricesIfEmpty } from "../lib/basePrices";
 import { loadHiddenGenres } from "../lib/genreVisibilityStorage";
 import {
   applyHiddenGenresFromCloud,
@@ -46,12 +45,7 @@ function normalizeLoaded(data: PriceData): PriceData {
         .trim(),
     },
   };
-  const normalized = ensureProductCategories(cleaned);
-  const withBase = withDerivedBasePricesIfEmpty(normalized);
-  if (withBase.basePrices.length > normalized.basePrices.length) {
-    return withBase;
-  }
-  return normalized;
+  return ensureProductCategories(cleaned);
 }
 
 export function usePriceData(authenticated: boolean, uid: string | null) {

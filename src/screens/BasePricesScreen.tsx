@@ -210,7 +210,7 @@ export function BasePricesScreen({
         <div className="base-header-row">
           {!fullscreen && (
             <div className="base-header-title">
-              <p className="label">全客先共通</p>
+              <p className="label">客先別単価とは別・アプリ独自</p>
               <h1 className="base-header-name">基本価格表</h1>
               {priceEditMode ? (
                 <label className="base-effective-date-edit">

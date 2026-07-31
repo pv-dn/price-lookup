@@ -1,6 +1,5 @@
 import { useRef, useState } from "react";
 import { convertPourVousBackup, validatePourVousBackup } from "../lib/convertPourVous";
-import { withDerivedBasePricesIfEmpty } from "../lib/basePrices";
 import { mergePriceSheetExcelResult } from "../lib/mergePriceSheetExcel";
 import { getManualCustomers, removeManualCustomer } from "../lib/manualCustomers";
 import { mergePourVousWithLocal } from "../lib/productMaster";
@@ -57,9 +56,7 @@ export function SettingsScreen({
         throw new Error("プゥルヴー伝票のバックアップJSONではありません");
       }
       const converted = convertPourVousBackup(parsed, "import");
-      const merged = withDerivedBasePricesIfEmpty(
-        mergePourVousWithLocal(converted, data),
-      );
+      const merged = mergePourVousWithLocal(converted, data);
       onApply(merged);
       const manualKept = getManualCustomers(merged).length;
       showMsg(
@@ -104,9 +101,7 @@ export function SettingsScreen({
     setMessage(null);
     try {
       const converted = await loadFromFirestore();
-      const merged = withDerivedBasePricesIfEmpty(
-        mergePourVousWithLocal(converted, data),
-      );
+      const merged = mergePourVousWithLocal(converted, data);
       onApply(merged);
       const manualKept = getManualCustomers(merged).length;
       showMsg(
@@ -174,25 +169,9 @@ export function SettingsScreen({
             </div>
           )}
         </dl>
-        {data && data.basePrices.length === 0 && data.prices.length > 0 && (
-          <div className="settings-actions-col" style={{ marginTop: "0.75rem" }}>
-            <button
-              type="button"
-              className="btn btn-secondary"
-              disabled={busy}
-              onClick={() => {
-                const restored = withDerivedBasePricesIfEmpty(data);
-                onApply(restored);
-                showMsg(
-                  `基本単価を${restored.basePrices.length}件推定しました（基本価格表タブで確認・修正できます）`,
-                  "ok",
-                );
-              }}
-            >
-              客先単価から基本単価を推定
-            </button>
-          </div>
-        )}
+        <p className="settings-desc" style={{ marginTop: "0.75rem" }}>
+          基本価格表は客先別単価とは別です。伝票同期では上書きされません。入力・Excel取込は「基本価格表」タブで行います。
+        </p>
       </div>
 
       <section className="settings-section">
@@ -240,7 +219,7 @@ export function SettingsScreen({
       <section className="settings-section">
         <h2 className="settings-title">③ Firestore同期</h2>
         <p className="settings-desc">
-          伝票アプリと同じクラウドデータから最新の品番・単価を取得します。
+          伝票アプリと同じクラウドデータから最新の品番・客先別単価を取得します。基本価格表は上書きしません。
         </p>
         {userEmail && <p className="settings-logged-in">ログイン中: {userEmail}</p>}
         <button
