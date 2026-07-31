@@ -1115,6 +1115,16 @@
   background: var(--accent-hover);
 }
 
+.base-btn-clear-base {
+  background: var(--surface);
+  color: var(--danger, #b42318);
+  border: 1px solid var(--border);
+}
+
+.base-btn-clear-base:hover {
+  background: #fef3f2;
+}
+
 .base-count {
   flex: 0 0 auto;
   font-size: 11px;

@@ -9,10 +9,10 @@ import {
   addProduct,
   moveCategory,
   removeCategory,
-  removeProduct,
   renameCategory,
   updateProduct,
 } from "../lib/productMaster";
+import { clearAllBasePrices, removeBasePrice } from "../lib/basePrices";
 import type { PriceData } from "../types";
 import { formatDate, formatYen, normalizeQuery } from "../utils/format";
 import {
@@ -187,10 +187,35 @@ export function BasePricesScreen({
     }
   };
 
-  const handleDeleteProduct = (code: string, name: string) => {
-    if (confirm(`「${code} ${name}」を削除しますか？\n単価データも消えます。`)) {
-      run(() => removeProduct(data, code));
+  const handleRemoveFromBase = (code: string, name: string) => {
+    if (
+      !confirm(
+        `「${name}」を基本価格表から外しますか？\n客先別単価・品目マスタは残ります。`,
+      )
+    ) {
+      return;
     }
+    setDraft((prev) => {
+      const next = new Map(prev);
+      next.delete(code);
+      return next;
+    });
+    onUpdate(removeBasePrice(data, code));
+    setNotice({ text: `「${name}」を基本価格表から外しました`, type: "ok" });
+  };
+
+  const handleClearAllBase = () => {
+    if (basePrices.length === 0) return;
+    if (
+      !confirm(
+        `基本価格表の単価 ${basePrices.length}件をすべて消しますか？\n客先別単価・品目マスタは残ります。`,
+      )
+    ) {
+      return;
+    }
+    setDraft(new Map());
+    onUpdate(clearAllBasePrices(data));
+    setNotice({ text: "基本価格表の単価をすべてクリアしました", type: "ok" });
   };
 
   const defaultCategory = categories.includes("その他")
@@ -288,6 +313,17 @@ export function BasePricesScreen({
           {priceEditMode && (
             <button type="button" className="base-btn base-btn-save" onClick={handleSave}>
               保存
+            </button>
+          )}
+
+          {priceEditMode && basePrices.length > 0 && (
+            <button
+              type="button"
+              className="base-btn base-btn-clear-base"
+              onClick={handleClearAllBase}
+              title="基本価格表の単価だけすべて消す"
+            >
+              単価クリア
             </button>
           )}
 
@@ -527,7 +563,9 @@ export function BasePricesScreen({
             onReorderInGroup={handleReorderInGroup}
             onSetPrice={setPrice}
             onEditProduct={showEditor ? handleEditProduct : undefined}
-            onDeleteProduct={showEditor ? handleDeleteProduct : undefined}
+            onDeleteProduct={
+              priceEditMode || showEditor ? handleRemoveFromBase : undefined
+            }
             hiddenGenres={hidden}
           />
         ) : (
@@ -562,12 +600,12 @@ export function BasePricesScreen({
                     {formatYen(parseInt(draft.get(product.code) ?? "0", 10))}
                   </span>
                 )}
-                {showEditor && (
+                {(priceEditMode || showEditor) && (
                   <button
                     type="button"
                     className="base-inline-delete"
-                    onClick={() => handleDeleteProduct(product.code, product.name)}
-                    title="削除"
+                    onClick={() => handleRemoveFromBase(product.code, product.name)}
+                    title="基本価格表から外す"
                   >
                     ×
                   </button>

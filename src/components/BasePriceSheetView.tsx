@@ -179,7 +179,7 @@ function SheetColumn({
                         type="button"
                         className="base-inline-delete-sm"
                         onClick={() => onDeleteProduct(product.code, product.name)}
-                        title="削除"
+                        title="基本価格表から外す"
                       >
                         ×
                       </button>

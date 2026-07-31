@@ -38,3 +38,27 @@ export function basePriceEntriesForCustomer(
 ): { code: string; price: number }[] {
   return data.basePrices.map((p) => ({ code: p.code, price: p.price }));
 }
+
+/** 基本価格表からだけ外す（品目マスタ・客先別単価は残す） */
+export function removeBasePrice(data: PriceData, code: string): PriceData {
+  return {
+    ...data,
+    basePrices: data.basePrices.filter((p) => p.code !== code),
+    meta: {
+      ...data.meta,
+      updatedAt: today(),
+    },
+  };
+}
+
+/** 基本価格表の単価をすべてクリア（品目マスタ・客先別単価は残す） */
+export function clearAllBasePrices(data: PriceData): PriceData {
+  return {
+    ...data,
+    basePrices: [],
+    meta: {
+      ...data.meta,
+      updatedAt: today(),
+    },
+  };
+}
