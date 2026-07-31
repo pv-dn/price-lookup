@@ -62,7 +62,7 @@ export function BasePricesScreen({
 
   const [draft, setDraft] = useState<Map<string, string>>(() => new Map());
   const [draftEffectiveFrom, setDraftEffectiveFrom] = useState(
-    () => meta.effectiveFrom || "",
+    () => meta.effectiveFrom || "2026-08-01",
   );
 
   const [newCode, setNewCode] = useState("");
@@ -82,7 +82,7 @@ export function BasePricesScreen({
   }, [basePrices]);
 
   useEffect(() => {
-    setDraftEffectiveFrom(meta.effectiveFrom || "");
+    setDraftEffectiveFrom(meta.effectiveFrom || "2026-08-01");
   }, [meta.effectiveFrom]);
 
   const filtered = useMemo(() => {

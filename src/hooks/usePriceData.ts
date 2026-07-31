@@ -22,7 +22,7 @@ function today(): string {
 function createEmptyData(): PriceData {
   return {
     meta: {
-      effectiveFrom: "",
+      effectiveFrom: "2026-08-01",
       revisionName: "データ未取込",
       updatedAt: today(),
       source: "none",
@@ -40,6 +40,7 @@ function normalizeLoaded(data: PriceData): PriceData {
     ...data,
     meta: {
       ...data.meta,
+      effectiveFrom: "2026-08-01",
       revisionName: data.meta.revisionName
         .replace(/（基本単価は客先単価から推定）/g, "")
         .trim(),
@@ -120,7 +121,7 @@ export function usePriceData(authenticated: boolean, uid: string | null) {
   }, [data, persistToCloud]);
 
   const commitResolvedData = useCallback(
-    (resolved: PriceData, backup?: PriceLookupCloudBackup | null) => {
+    (resolved: PriceData, backup?: PriceLookupCloudBackup | null): PriceData => {
       const normalized = normalizeLoaded(resolved);
       saveStoredData(normalized);
       setData(normalized);
@@ -130,6 +131,7 @@ export function usePriceData(authenticated: boolean, uid: string | null) {
       if (backup?.savedAt) {
         setCloudSavedAt(backup.savedAt);
       }
+      return normalized;
     },
     [],
   );
@@ -150,29 +152,28 @@ export function usePriceData(authenticated: boolean, uid: string | null) {
         const newer = pickNewerPriceData(local, cloud.data);
         const hiddenGenres =
           localTime >= cloudTime ? loadHiddenGenres() : cloud.hiddenGenres;
-        commitResolvedData(newer, { ...cloud, hiddenGenres });
-        if (localTime < cloudTime) {
-          void persistToCloud(newer, { immediate: true });
-        }
+        const committed = commitResolvedData(newer, { ...cloud, hiddenGenres });
+        void persistToCloud(committed, { immediate: true });
         return;
       }
 
       if (local) {
-        commitResolvedData(local);
-        void persistToCloud(local, { immediate: true });
+        const committed = commitResolvedData(local);
+        void persistToCloud(committed, { immediate: true });
         return;
       }
 
       if (cloud) {
-        commitResolvedData(cloud.data, cloud);
+        const committed = commitResolvedData(cloud.data, cloud);
+        void persistToCloud(committed, { immediate: true });
         return;
       }
 
       setRestoring(true);
       try {
         const fromPourVous = await loadFromFirestore();
-        commitResolvedData(fromPourVous);
-        void persistToCloud(fromPourVous, { immediate: true });
+        const committed = commitResolvedData(fromPourVous);
+        void persistToCloud(committed, { immediate: true });
         return;
       } catch {
         /* 伝票データの自動復元に失敗 */
