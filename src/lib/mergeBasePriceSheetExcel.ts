@@ -40,7 +40,8 @@ export function mergeBasePriceSheetExcel(
 ): { data: PriceData; pricedCount: number; matchedCount: number } {
   const usedCodes = new Set(data.products.map((p) => p.code));
   const products = [...data.products];
-  const baseMap = new Map(data.basePrices.map((p) => [p.code, p.price]));
+  // Excelの「基本」シートの内容で基本単価を置き換える（客先単価の推定値は残さない）
+  const baseMap = new Map<string, number>();
   let pricedCount = 0;
   let matchedCount = 0;
 
@@ -74,6 +75,7 @@ export function mergeBasePriceSheetExcel(
       meta: {
         ...data.meta,
         updatedAt: today(),
+        effectiveFrom: "2026-08-01",
         revisionName: "基本価格表（Excel取込）",
       },
       products,
