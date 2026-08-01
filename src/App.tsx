@@ -163,7 +163,7 @@ function App() {
     return (
       <div className="app">
         <div className="status-message">
-          {restoring ? "クラウドからデータを復元中…" : "読み込み中…"}
+          {restoring ? "最新データを同期中…" : "読み込み中…"}
         </div>
       </div>
     );

@@ -5,6 +5,10 @@ import { getManualCustomers, removeManualCustomer } from "../lib/manualCustomers
 import { mergePourVousWithLocal } from "../lib/productMaster";
 import { readPriceSheetExcelFile } from "../lib/parsePriceSheetExcel";
 import { changeLoginPassword } from "../lib/priceLookupAuth";
+import {
+  loadAutoSyncOnLogin,
+  saveAutoSyncOnLogin,
+} from "../lib/autoSyncStorage";
 import { loadFromFirestore } from "../lib/pourvousFirestore";
 import { defaultCategories } from "../constants/productCategories";
 import { ensureProductCategories } from "../lib/productMaster";
@@ -47,6 +51,9 @@ export function SettingsScreen({
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [newPasswordConfirm, setNewPasswordConfirm] = useState("");
+  const [autoSyncOnLogin, setAutoSyncOnLogin] = useState(() =>
+    loadAutoSyncOnLogin(),
+  );
 
   const showMsg = (text: string, type: "ok" | "err") => {
     setMessage({ text, type });
@@ -257,6 +264,24 @@ export function SettingsScreen({
           伝票アプリと同じクラウドデータから最新の品番・客先別単価を取得します。基本価格表は上書きしません。
         </p>
         {userEmail && <p className="settings-logged-in">ログイン中: {userEmail}</p>}
+        <label className="settings-check">
+          <input
+            type="checkbox"
+            checked={autoSyncOnLogin}
+            onChange={(e) => {
+              const on = e.target.checked;
+              setAutoSyncOnLogin(on);
+              saveAutoSyncOnLogin(on);
+              showMsg(
+                on
+                  ? "ログイン時に自動同期するようにしました"
+                  : "ログイン時の自動同期をオフにしました",
+                "ok",
+              );
+            }}
+          />
+          <span>ログイン時に「最新データを同期」を自動実行する</span>
+        </label>
         <button
           type="button"
           className="btn btn-primary"

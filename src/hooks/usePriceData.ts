@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { defaultCategories } from "../constants/productCategories";
 import type { PriceData } from "../types";
+import { loadAutoSyncOnLogin } from "../lib/autoSyncStorage";
 import { loadHiddenGenres } from "../lib/genreVisibilityStorage";
 import {
   applyHiddenGenresFromCloud,
@@ -11,7 +12,7 @@ import {
 } from "../lib/priceLookupFirestore";
 import { setCloudBackupHandler } from "../lib/priceLookupCloudRegistry";
 import { loadFromFirestore } from "../lib/pourvousFirestore";
-import { ensureProductCategories } from "../lib/productMaster";
+import { ensureProductCategories, mergePourVousWithLocal } from "../lib/productMaster";
 import { clearStoredData, loadStoredData, saveStoredData } from "../lib/storage";
 
 function today(): string {
@@ -164,49 +165,72 @@ export function usePriceData(authenticated: boolean, uid: string | null) {
           ? await loadPriceLookupBackup(uidRef.current).catch(() => null)
           : null;
 
+      let current: PriceData | null = null;
+
       if (local && cloud) {
         const resolved = resolveLocalVsCloud(local, cloud);
-        const committed = commitResolvedData(resolved.data, {
+        current = commitResolvedData(resolved.data, {
           ...cloud,
           hiddenGenres: resolved.hiddenGenres,
         });
-        // ローカルの方が新しいときだけクラウドへ上げる（古いPCが上書きしない）
         if (resolved.source === "local") {
-          void persistToCloud(committed, { immediate: true });
+          void persistToCloud(current, { immediate: true });
         }
-        return;
+      } else if (local) {
+        current = commitResolvedData(local);
+        void persistToCloud(current, { immediate: true });
+      } else if (cloud) {
+        current = commitResolvedData(cloud.data, cloud);
+      } else {
+        setRestoring(true);
+        try {
+          const fromPourVous = await loadFromFirestore();
+          current = commitResolvedData(fromPourVous);
+          void persistToCloud(current, { immediate: true });
+        } catch {
+          current = normalizeLoaded(createEmptyData());
+          setData(current);
+        } finally {
+          setRestoring(false);
+        }
       }
 
-      if (local) {
-        const committed = commitResolvedData(local);
-        void persistToCloud(committed, { immediate: true });
-        return;
+      // ログイン時に「最新データを同期」相当を自動実行
+      if (current && loadAutoSyncOnLogin()) {
+        setRestoring(true);
+        try {
+          const converted = await loadFromFirestore();
+          const merged = stampSynced(
+            normalizeLoaded(mergePourVousWithLocal(converted, current)),
+          );
+          saveStoredData(merged);
+          setData(merged);
+          await persistToCloud(merged, { immediate: true });
+        } catch (e) {
+          console.warn("ログイン時の自動同期に失敗しました", e);
+        } finally {
+          setRestoring(false);
+        }
       }
-
-      if (cloud) {
-        commitResolvedData(cloud.data, cloud);
-        return;
-      }
-
-      setRestoring(true);
-      try {
-        const fromPourVous = await loadFromFirestore();
-        const committed = commitResolvedData(fromPourVous);
-        void persistToCloud(committed, { immediate: true });
-        return;
-      } catch {
-        /* 伝票データの自動復元に失敗 */
-      } finally {
-        setRestoring(false);
-      }
-
-      setData(normalizeLoaded(createEmptyData()));
     } catch (e) {
       setError(e instanceof Error ? e.message : "不明なエラー");
     } finally {
       setLoading(false);
     }
   }, [commitResolvedData, persistToCloud]);
+
+  const syncFromPourVous = useCallback(async () => {
+    const existing = loadStoredData();
+    const converted = await loadFromFirestore();
+    const merged = stampSynced(
+      normalizeLoaded(mergePourVousWithLocal(converted, existing)),
+    );
+    saveStoredData(merged);
+    setData(merged);
+    setError(null);
+    await persistToCloud(merged, { immediate: true });
+    return merged;
+  }, [persistToCloud]);
 
   /** 他PCの最新を取り込む。ローカルよりクラウドを優先する */
   const reloadFromCloud = useCallback(async () => {
@@ -279,6 +303,7 @@ export function usePriceData(authenticated: boolean, uid: string | null) {
     resetStored,
     reload: loadInitial,
     reloadFromCloud,
+    syncFromPourVous,
     saveToCloudNow,
   };
 }
