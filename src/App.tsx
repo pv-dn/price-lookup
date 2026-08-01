@@ -38,6 +38,7 @@ function App() {
     applyData,
     resetStored,
     saveToCloudNow,
+    reloadFromCloud,
   } = usePriceData(isAuthenticated, user?.uid ?? null);
   const [screen, setScreen] = useState<Screen>("customers");
   const [customerId, setCustomerId] = useState<string | null>(null);
@@ -242,6 +243,7 @@ function App() {
             cloudSavedAt={cloudSavedAt}
             savingCloud={savingCloud}
             onSaveToCloud={saveToCloudNow}
+            onReloadFromCloud={reloadFromCloud}
           />
         )}
 

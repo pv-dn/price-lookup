@@ -1,5 +1,5 @@
 import { doc, getDoc, setDoc } from "firebase/firestore";
-import { saveHiddenGenres } from "./genreVisibilityStorage";
+import { loadHiddenGenres, saveHiddenGenres } from "./genreVisibilityStorage";
 import { db } from "./firebase";
 import { validatePriceData } from "./storage";
 import type { PriceData } from "../types";
@@ -21,8 +21,43 @@ export function dataRevisionTime(data: PriceData): number {
   }
   const day = data.meta.updatedAt;
   if (!day) return 0;
+  // 日付のみの場合は弱い信号（正午扱い）
   const t = Date.parse(`${day}T12:00:00`);
   return Number.isNaN(t) ? 0 : t;
+}
+
+/** クラウド側は savedAt（実保存時刻）を優先して比較する */
+export function cloudBackupTime(backup: PriceLookupCloudBackup): number {
+  const saved = backup.savedAt ? Date.parse(backup.savedAt) : NaN;
+  const fromData = dataRevisionTime(backup.data);
+  if (!Number.isNaN(saved) && saved > 0) return Math.max(saved, fromData);
+  return fromData;
+}
+
+/**
+ * ローカルとクラウドのどちらを採用するか。
+ * 同時刻・日付のみの同点ではクラウドを優先（他PCの古いキャッシュが上書きするのを防ぐ）。
+ */
+export function resolveLocalVsCloud(
+  local: PriceData,
+  cloud: PriceLookupCloudBackup,
+): { data: PriceData; source: "local" | "cloud"; hiddenGenres: string[] } {
+  const localTime = dataRevisionTime(local);
+  const cloudTime = cloudBackupTime(cloud);
+
+  if (localTime > cloudTime) {
+    return {
+      data: local,
+      source: "local",
+      hiddenGenres: loadHiddenGenres(),
+    };
+  }
+
+  return {
+    data: cloud.data,
+    source: "cloud",
+    hiddenGenres: cloud.hiddenGenres,
+  };
 }
 
 export function pickNewerPriceData(a: PriceData, b: PriceData): PriceData {

@@ -104,6 +104,7 @@ export function mergeBasePriceSheetExcel(
       meta: {
         ...data.meta,
         updatedAt: today(),
+        syncedAt: new Date().toISOString(),
         revisionName: "基本価格表（Excel取込）",
       },
       categories: mergeCategoryOrder(data.categories, excelCategories),

@@ -4,9 +4,8 @@ import type { PriceData } from "../types";
 import { loadHiddenGenres } from "../lib/genreVisibilityStorage";
 import {
   applyHiddenGenresFromCloud,
-  dataRevisionTime,
   loadPriceLookupBackup,
-  pickNewerPriceData,
+  resolveLocalVsCloud,
   savePriceLookupBackup,
   type PriceLookupCloudBackup,
 } from "../lib/priceLookupFirestore";
@@ -17,6 +16,18 @@ import { clearStoredData, loadStoredData, saveStoredData } from "../lib/storage"
 
 function today(): string {
   return new Date().toISOString().slice(0, 10);
+}
+
+function stampSynced(data: PriceData): PriceData {
+  const now = new Date().toISOString();
+  return {
+    ...data,
+    meta: {
+      ...data.meta,
+      updatedAt: today(),
+      syncedAt: now,
+    },
+  };
 }
 
 function createEmptyData(): PriceData {
@@ -71,13 +82,20 @@ export function usePriceData(authenticated: boolean, uid: string | null) {
       const run = async () => {
         setSavingCloud(true);
         try {
+          const stamped = nextData.meta.syncedAt
+            ? nextData
+            : stampSynced(nextData);
           const payload: PriceLookupCloudBackup = {
-            data: nextData,
+            data: stamped,
             hiddenGenres: loadHiddenGenres(),
-            savedAt: new Date().toISOString(),
+            savedAt: stamped.meta.syncedAt || new Date().toISOString(),
           };
           await savePriceLookupBackup(activeUid, payload);
           setCloudSavedAt(payload.savedAt);
+          if (!nextData.meta.syncedAt) {
+            saveStoredData(stamped);
+            setData(stamped);
+          }
         } catch (e) {
           console.warn("クラウド保存に失敗しました", e);
         } finally {
@@ -101,7 +119,7 @@ export function usePriceData(authenticated: boolean, uid: string | null) {
 
   const applyData = useCallback(
     (newData: PriceData) => {
-      const normalized = normalizeLoaded(newData);
+      const normalized = stampSynced(normalizeLoaded(newData));
       try {
         saveStoredData(normalized);
       } catch (e) {
@@ -110,7 +128,7 @@ export function usePriceData(authenticated: boolean, uid: string | null) {
       }
       setData(normalized);
       setError(null);
-      void persistToCloud(normalized);
+      void persistToCloud(normalized, { immediate: true });
     },
     [persistToCloud],
   );
@@ -147,13 +165,15 @@ export function usePriceData(authenticated: boolean, uid: string | null) {
           : null;
 
       if (local && cloud) {
-        const localTime = dataRevisionTime(local);
-        const cloudTime = dataRevisionTime(cloud.data);
-        const newer = pickNewerPriceData(local, cloud.data);
-        const hiddenGenres =
-          localTime >= cloudTime ? loadHiddenGenres() : cloud.hiddenGenres;
-        const committed = commitResolvedData(newer, { ...cloud, hiddenGenres });
-        void persistToCloud(committed, { immediate: true });
+        const resolved = resolveLocalVsCloud(local, cloud);
+        const committed = commitResolvedData(resolved.data, {
+          ...cloud,
+          hiddenGenres: resolved.hiddenGenres,
+        });
+        // ローカルの方が新しいときだけクラウドへ上げる（古いPCが上書きしない）
+        if (resolved.source === "local") {
+          void persistToCloud(committed, { immediate: true });
+        }
         return;
       }
 
@@ -164,8 +184,7 @@ export function usePriceData(authenticated: boolean, uid: string | null) {
       }
 
       if (cloud) {
-        const committed = commitResolvedData(cloud.data, cloud);
-        void persistToCloud(committed, { immediate: true });
+        commitResolvedData(cloud.data, cloud);
         return;
       }
 
@@ -188,6 +207,28 @@ export function usePriceData(authenticated: boolean, uid: string | null) {
       setLoading(false);
     }
   }, [commitResolvedData, persistToCloud]);
+
+  /** 他PCの最新を取り込む。ローカルよりクラウドを優先する */
+  const reloadFromCloud = useCallback(async () => {
+    const activeUid = uidRef.current;
+    if (!activeUid) {
+      throw new Error("ログインしていません");
+    }
+    setLoading(true);
+    setError(null);
+    try {
+      const cloud = await loadPriceLookupBackup(activeUid);
+      if (!cloud) {
+        throw new Error("クラウドに保存データがありません");
+      }
+      commitResolvedData(cloud.data, cloud);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "クラウド読込に失敗しました");
+      throw e;
+    } finally {
+      setLoading(false);
+    }
+  }, [commitResolvedData]);
 
   const resetStored = useCallback(async () => {
     clearStoredData();
@@ -237,6 +278,7 @@ export function usePriceData(authenticated: boolean, uid: string | null) {
     applyData,
     resetStored,
     reload: loadInitial,
+    reloadFromCloud,
     saveToCloudNow,
   };
 }

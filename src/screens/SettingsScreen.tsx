@@ -18,6 +18,7 @@ type Props = {
   cloudSavedAt: string | null;
   savingCloud: boolean;
   onSaveToCloud: () => Promise<void>;
+  onReloadFromCloud: () => Promise<void>;
 };
 
 const SOURCE_LABELS: Record<string, string> = {
@@ -36,6 +37,7 @@ export function SettingsScreen({
   cloudSavedAt,
   savingCloud,
   onSaveToCloud,
+  onReloadFromCloud,
 }: Props) {
   const fileRef = useRef<HTMLInputElement>(null);
   const excelRef = useRef<HTMLInputElement>(null);
@@ -272,7 +274,7 @@ export function SettingsScreen({
       <section className="settings-section">
         <h2 className="settings-title">価格表データのクラウド保存</h2>
         <p className="settings-desc">
-          ジャンル編集・基本価格表・手入力の客先など、価格表アプリ独自の編集内容を Firebase に保存します。保存・編集のあと自動で同期されます（ログイン中のユーザーごと）。
+          ジャンル編集・基本価格表・手入力の客先など、価格表アプリ独自の編集内容を Firebase に保存します。保存・編集のあと自動で同期されます（ログイン中のユーザーごと）。他のPCで最新にならないときは「クラウドから再読込」を使ってください。
         </p>
         {cloudSavedAt ? (
           <p className="settings-logged-in">
@@ -281,29 +283,54 @@ export function SettingsScreen({
         ) : (
           <p className="settings-desc">まだクラウドに保存されていません。</p>
         )}
-        <button
-          type="button"
-          className="btn btn-secondary"
-          disabled={busy || savingCloud || !data}
-          onClick={() => {
-            void (async () => {
-              setBusy(true);
-              try {
-                await onSaveToCloud();
-                showMsg("クラウドに保存しました", "ok");
-              } catch (e) {
-                showMsg(
-                  e instanceof Error ? e.message : "クラウド保存に失敗しました",
-                  "err",
-                );
-              } finally {
-                setBusy(false);
-              }
-            })();
-          }}
-        >
-          {savingCloud ? "クラウド保存中…" : "今すぐクラウドに保存"}
-        </button>
+        <div className="settings-actions-col">
+          <button
+            type="button"
+            className="btn btn-secondary"
+            disabled={busy || savingCloud || !data}
+            onClick={() => {
+              void (async () => {
+                setBusy(true);
+                try {
+                  await onSaveToCloud();
+                  showMsg("クラウドに保存しました", "ok");
+                } catch (e) {
+                  showMsg(
+                    e instanceof Error ? e.message : "クラウド保存に失敗しました",
+                    "err",
+                  );
+                } finally {
+                  setBusy(false);
+                }
+              })();
+            }}
+          >
+            {savingCloud ? "クラウド保存中…" : "今すぐクラウドに保存"}
+          </button>
+          <button
+            type="button"
+            className="btn btn-ghost"
+            disabled={busy || savingCloud}
+            onClick={() => {
+              void (async () => {
+                setBusy(true);
+                try {
+                  await onReloadFromCloud();
+                  showMsg("クラウドから再読込しました", "ok");
+                } catch (e) {
+                  showMsg(
+                    e instanceof Error ? e.message : "クラウド読込に失敗しました",
+                    "err",
+                  );
+                } finally {
+                  setBusy(false);
+                }
+              })();
+            }}
+          >
+            クラウドから再読込
+          </button>
+        </div>
       </section>
 
       <section className="settings-section">
