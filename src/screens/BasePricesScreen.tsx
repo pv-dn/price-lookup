@@ -127,7 +127,10 @@ export function BasePricesScreen({
 
   const { hidden, isVisible, toggle, showAll, allVisible } = useGenreVisibility(categories);
 
-  const sheetBrowseLayout = !priceEditMode && viewMode === "sheet";
+  const sheetLayout = viewMode === "sheet";
+  // 閲覧・編集どちらでも「手動」ならドラッグ並替可
+  const canReorderRows = sheetLayout && sortBy === "manual";
+  const canResizeColumns = sheetLayout && !priceEditMode;
 
   const handleSave = () => {
     if (!draftEffectiveFrom.trim()) {
@@ -379,7 +382,9 @@ export function BasePricesScreen({
             手動
           </button>
           {sortBy === "manual" && (
-            <span className="base-sort-hint">一覧表でドラッグして並替・列幅調整</span>
+            <span className="base-sort-hint">
+              一覧表の行をドラッグして並替（同じジャンル内）
+            </span>
           )}
         </div>
 
@@ -556,8 +561,8 @@ export function BasePricesScreen({
             categories={categories}
             draft={draft}
             readOnly={!priceEditMode}
-            allowRowReorder={sheetBrowseLayout && sortBy === "manual"}
-            allowColumnResize={sheetBrowseLayout}
+            allowRowReorder={canReorderRows}
+            allowColumnResize={canResizeColumns}
             getColumnWidth={getColumnWidth}
             onColumnResizeStart={startColumnResize}
             onReorderInGroup={handleReorderInGroup}
