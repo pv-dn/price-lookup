@@ -254,13 +254,14 @@ function App() {
             }}
             onImportExcel={async (file) => {
               const buffer = await file.arrayBuffer();
-              const { items } = await readBasePriceSheetExcelFile(
+              const { items, sheetName } = await readBasePriceSheetExcelFile(
                 buffer,
                 data.categories,
               );
               const { data: merged, message } = mergeBasePriceSheetExcelResult(
                 data,
                 items,
+                sheetName,
               );
               applyData(merged);
               return message;

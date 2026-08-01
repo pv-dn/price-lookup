@@ -85,10 +85,22 @@ export function mergeBasePriceSheetExcel(
 export function mergeBasePriceSheetExcelResult(
   data: PriceData,
   items: ParsedPriceSheetItem[],
+  sheetName?: string,
 ): { data: PriceData; message: string } {
   const { data: merged, pricedCount, matchedCount } = mergeBasePriceSheetExcel(data, items);
-  const message = `取込完了（品目${items.length}件・マスタ一致${matchedCount}件${
+  const sheetLabel = sheetName ? `「${sheetName}」` : "";
+  const message = `取込完了${sheetLabel}（品目${items.length}件・マスタ一致${matchedCount}件${
     pricedCount > 0 ? `・基本単価${pricedCount}件` : "・単価は未入力"
   }）`;
-  return { data: merged, message };
+  return {
+    data: {
+      ...merged,
+      meta: {
+        ...merged.meta,
+        effectiveFrom: merged.meta.effectiveFrom || "2026-08-01",
+        revisionName: "基本価格表（Excel取込）",
+      },
+    },
+    message,
+  };
 }

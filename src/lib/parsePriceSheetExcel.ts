@@ -18,6 +18,13 @@ function isCategoryLabel(name: string, categories: string[]): boolean {
   const n = normalizeSheetText(name);
   if (!n) return true;
   if (n.startsWith("☆")) return true;
+  if (/類$|他$/.test(n)) return true;
+  if (/^品\s*名$/u.test(n.replace(/\s/g, "")) || n === "単価") return true;
+  if (/クロス|カバー/.test(n) && !/\d/.test(n) && n.length <= 10) {
+    /* 見出し「クロス・カバー」など */
+    if (n === "クロス・カバー" || n === "クロスカバー") return true;
+  }
+  if (/〇|○|＝|÷|×/.test(n)) return true;
   return categories.some((c) => normalizeNameKey(c) === normalizeNameKey(n));
 }
 
@@ -26,6 +33,11 @@ function parsePrice(value: unknown): number | null {
   if (typeof value === "number" && Number.isFinite(value)) return value;
   const text = normalizeSheetText(value).replace(/[,，円¥]/g, "");
   if (!text) return null;
+  const slash = text.match(/^(\d+(?:\.\d+)?)\s*[/／]/);
+  if (slash) {
+    const n = Number(slash[1]);
+    return Number.isFinite(n) ? n : null;
+  }
   const num = Number(text);
   return Number.isFinite(num) ? num : null;
 }
@@ -174,13 +186,21 @@ export async function readPriceSheetExcelFile(
   return parsePriceSheetExcel(rows, categories);
 }
 
+function pickBasePriceSheetName(sheetNames: string[]): string | undefined {
+  const exact = sheetNames.find((n) => n.trim() === "基本");
+  if (exact) return exact;
+  const fuzzy = sheetNames.find((n) => /基本/.test(n));
+  if (fuzzy) return fuzzy;
+  return sheetNames[0];
+}
+
 export async function readBasePriceSheetExcelFile(
   file: ArrayBuffer,
   categories: string[],
-): Promise<{ items: ParsedPriceSheetItem[] }> {
+): Promise<{ items: ParsedPriceSheetItem[]; sheetName: string }> {
   const XLSX = await import("xlsx");
   const workbook = XLSX.read(file, { type: "array", cellDates: true });
-  const sheetName = workbook.SheetNames[0];
+  const sheetName = pickBasePriceSheetName(workbook.SheetNames);
   if (!sheetName) throw new Error("シートが見つかりません");
   const sheet = workbook.Sheets[sheetName];
   const rows = XLSX.utils.sheet_to_json(sheet, {
@@ -188,5 +208,8 @@ export async function readBasePriceSheetExcelFile(
     defval: "",
     raw: true,
   }) as unknown[][];
-  return parseBasePriceSheetExcel(rows, categories);
+  return {
+    ...parseBasePriceSheetExcel(rows, categories),
+    sheetName,
+  };
 }
