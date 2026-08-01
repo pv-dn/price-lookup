@@ -89,7 +89,16 @@ export function SettingsScreen({
       onApply(merged);
       showMsg(message, "ok");
     } catch (e) {
-      showMsg(e instanceof Error ? e.message : "Excel取込に失敗しました", "err");
+      const msg = e instanceof Error ? e.message : "Excel取込に失敗しました";
+      // 先頭シートが店舗一覧などで、基本シートがあるファイル向けの案内
+      if (msg.includes("品名・単価") || msg.includes("客先名")) {
+        showMsg(
+          `${msg} ※客先別の価格表シート用です。「基本」シートの取込は「基本価格表」画面の Excel から行ってください。`,
+          "err",
+        );
+      } else {
+        showMsg(msg, "err");
+      }
     } finally {
       setBusy(false);
       if (excelRef.current) excelRef.current.value = "";
