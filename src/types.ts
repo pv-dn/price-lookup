@@ -39,6 +39,8 @@ export type DataSource = "sample" | "import" | "firestore" | "excel" | "none";
 export type ParsedPriceSheetItem = {
   name: string;
   price: number | null;
+  /** Excel列見出し・セクション見出しから取ったジャンル */
+  category?: string;
 };
 
 export type ParsedPriceSheet = {

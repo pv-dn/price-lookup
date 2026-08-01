@@ -29,6 +29,27 @@ function findProductExactName(products: Product[], name: string): Product | unde
   return products.find((p) => normalizeNameKey(p.name) === key);
 }
 
+function mergeCategoryOrder(
+  existing: string[],
+  fromExcel: string[],
+): string[] {
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const c of fromExcel) {
+    const key = normalizeNameKey(c);
+    if (!c || seen.has(key)) continue;
+    seen.add(key);
+    out.push(c);
+  }
+  for (const c of existing) {
+    const key = normalizeNameKey(c);
+    if (!c || seen.has(key)) continue;
+    seen.add(key);
+    out.push(c);
+  }
+  return out;
+}
+
 export function mergeBasePriceSheetExcel(
   data: PriceData,
   items: ParsedPriceSheetItem[],
@@ -37,23 +58,33 @@ export function mergeBasePriceSheetExcel(
   const products = [...data.products];
   // Excel「基本」が正。あいまい一致は使わない（「Ｙシャツ DX」が「Ｙシャツ」を上書きするのを防ぐ）
   const baseMap = new Map<string, number>();
+  const excelCategories: string[] = [];
   let pricedCount = 0;
   let matchedCount = 0;
   let createdCount = 0;
 
   for (const item of items) {
+    if (item.category) excelCategories.push(item.category);
+
+    const category =
+      item.category || guessCategory(item.name, data.categories);
+
     let product = findProductExactName(products, item.name);
     if (!product) {
       product = {
         code: makeExcelCode(item.name, usedCodes),
         name: item.name,
-        category: guessCategory(item.name, data.categories),
+        category,
       };
       usedCodes.add(product.code);
       products.push(product);
       createdCount++;
     } else {
       matchedCount++;
+      // 既存品目も Excel のジャンルに合わせる
+      const idx = products.findIndex((p) => p.code === product!.code);
+      products[idx] = { ...product, category };
+      product = products[idx];
     }
 
     if (item.price != null) {
@@ -75,6 +106,7 @@ export function mergeBasePriceSheetExcel(
         updatedAt: today(),
         revisionName: "基本価格表（Excel取込）",
       },
+      categories: mergeCategoryOrder(data.categories, excelCategories),
       products,
       basePrices,
     },

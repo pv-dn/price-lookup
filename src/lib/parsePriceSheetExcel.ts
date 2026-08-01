@@ -14,18 +14,34 @@ function normalizeNameKey(value: string): string {
   return normalizeSheetText(value).replace(/\s/g, "").toLowerCase();
 }
 
+function isNameHeader(name: string): boolean {
+  const compact = normalizeSheetText(name).replace(/\s/g, "");
+  return compact === "品名" || compact === "単価";
+}
+
 function isCategoryLabel(name: string, categories: string[]): boolean {
   const n = normalizeSheetText(name);
   if (!n) return true;
   if (n.startsWith("☆")) return true;
   if (/類$|他$/.test(n)) return true;
-  if (/^品\s*名$/u.test(n.replace(/\s/g, "")) || n === "単価") return true;
-  if (/クロス|カバー/.test(n) && !/\d/.test(n) && n.length <= 10) {
-    /* 見出し「クロス・カバー」など */
-    if (n === "クロス・カバー" || n === "クロスカバー") return true;
-  }
-  if (/〇|○|＝|÷|×/.test(n)) return true;
+  if (isNameHeader(n)) return true;
+  if (n === "クロス・カバー" || n === "クロスカバー") return true;
+  if (/[〇○＝÷×]/.test(n)) return true;
   return categories.some((c) => normalizeNameKey(c) === normalizeNameKey(n));
+}
+
+/** 単価なしのセルをジャンル見出しとして扱う */
+function isSectionHeader(
+  name: string,
+  priceRaw: unknown,
+  categories: string[],
+): boolean {
+  if (!name || isNameHeader(name)) return false;
+  if (/[〇○＝÷×]/.test(name)) return false;
+  if (parsePrice(priceRaw) != null) return false;
+  const priceText = normalizeSheetText(priceRaw).replace(/\s/g, "");
+  if (priceText.includes("単価")) return false;
+  return isCategoryLabel(name, categories) || priceText === "";
 }
 
 function parsePrice(value: unknown): number | null {
@@ -97,6 +113,7 @@ function findBlocks(headerRow: unknown[]): { nameCol: number; priceCol: number }
 function extractPriceSheetItems(
   rows: unknown[][],
   categories: string[],
+  withCategories = false,
 ): ParsedPriceSheetItem[] {
   const headerIndex = findHeaderRow(rows);
   const blocks = findBlocks(rows[headerIndex] ?? []);
@@ -106,20 +123,44 @@ function extractPriceSheetItems(
 
   const items: ParsedPriceSheetItem[] = [];
   const seen = new Set<string>();
+  const currentCategory = new Map<number, string>();
+
+  if (withCategories && headerIndex > 0) {
+    const genreRow = rows[headerIndex - 1] ?? [];
+    for (const { nameCol } of blocks) {
+      const genre = normalizeSheetText(genreRow[nameCol]);
+      if (genre && !isNameHeader(genre)) {
+        currentCategory.set(nameCol, genre);
+      }
+    }
+  }
 
   for (let r = headerIndex + 1; r < rows.length; r++) {
     const row = rows[r] ?? [];
     for (const { nameCol, priceCol } of blocks) {
       const name = normalizeSheetText(row[nameCol]);
-      if (!name || isCategoryLabel(name, categories)) continue;
+      if (!name) continue;
+      if (isNameHeader(name)) continue;
+      if (/[〇○＝÷×]/.test(name)) continue;
+
+      if (withCategories && isSectionHeader(name, row[priceCol], categories)) {
+        currentCategory.set(nameCol, name);
+        continue;
+      }
+
+      const price = parsePrice(row[priceCol]);
+      // ジャンル名と同じ品目（例: Ｙシャツ ¥200）は単価があれば品目として残す
+      if (price == null && isCategoryLabel(name, categories)) continue;
 
       const key = normalizeNameKey(name);
       if (seen.has(key)) continue;
       seen.add(key);
 
+      const category = withCategories ? currentCategory.get(nameCol) : undefined;
       items.push({
         name,
-        price: parsePrice(row[priceCol]),
+        price,
+        ...(category ? { category } : {}),
       });
     }
   }
@@ -135,7 +176,7 @@ export function parseBasePriceSheetExcel(
     throw new Error("価格表の形式ではありません（行数が足りません）");
   }
 
-  const items = extractPriceSheetItems(rows, categories);
+  const items = extractPriceSheetItems(rows, categories, true);
   if (items.length === 0) {
     throw new Error("品名が1件も見つかりませんでした");
   }
