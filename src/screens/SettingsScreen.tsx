@@ -4,6 +4,7 @@ import { mergePriceSheetExcelResult } from "../lib/mergePriceSheetExcel";
 import { getManualCustomers, removeManualCustomer } from "../lib/manualCustomers";
 import { mergePourVousWithLocal } from "../lib/productMaster";
 import { readPriceSheetExcelFile } from "../lib/parsePriceSheetExcel";
+import { changeLoginPassword } from "../lib/priceLookupAuth";
 import { loadFromFirestore } from "../lib/pourvousFirestore";
 import { defaultCategories } from "../constants/productCategories";
 import { ensureProductCategories } from "../lib/productMaster";
@@ -43,9 +44,32 @@ export function SettingsScreen({
   const excelRef = useRef<HTMLInputElement>(null);
   const [message, setMessage] = useState<{ text: string; type: "ok" | "err" } | null>(null);
   const [busy, setBusy] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [newPasswordConfirm, setNewPasswordConfirm] = useState("");
 
   const showMsg = (text: string, type: "ok" | "err") => {
     setMessage({ text, type });
+  };
+
+  const handleChangePassword = async () => {
+    if (newPassword.trim() !== newPasswordConfirm.trim()) {
+      showMsg("新しいパスワード（確認）が一致しません", "err");
+      return;
+    }
+    setBusy(true);
+    setMessage(null);
+    try {
+      await changeLoginPassword(currentPassword, newPassword);
+      setCurrentPassword("");
+      setNewPassword("");
+      setNewPasswordConfirm("");
+      showMsg("パスワードを変更しました。次回から新しいパスワードでログインしてください。", "ok");
+    } catch (e) {
+      showMsg(e instanceof Error ? e.message : "パスワード変更に失敗しました", "err");
+    } finally {
+      setBusy(false);
+    }
   };
 
   const handleImport = async (file: File) => {
@@ -329,6 +353,55 @@ export function SettingsScreen({
             }}
           >
             クラウドから再読込
+          </button>
+        </div>
+      </section>
+
+      <section className="settings-section">
+        <h2 className="settings-title">パスワード変更</h2>
+        <p className="settings-desc">
+          この画面だけで変更できます（Firebaseコンソール不要）。伝票アプリで同じアカウントを使っている場合は、そちらのログインも新しいパスワードになります。
+        </p>
+        <div className="settings-login">
+          <input
+            type="password"
+            className="settings-input"
+            placeholder="現在のパスワード"
+            value={currentPassword}
+            onChange={(e) => setCurrentPassword(e.target.value)}
+            autoComplete="current-password"
+            disabled={busy}
+          />
+          <input
+            type="password"
+            className="settings-input"
+            placeholder="新しいパスワード（6文字以上）"
+            value={newPassword}
+            onChange={(e) => setNewPassword(e.target.value)}
+            autoComplete="new-password"
+            disabled={busy}
+          />
+          <input
+            type="password"
+            className="settings-input"
+            placeholder="新しいパスワード（確認）"
+            value={newPasswordConfirm}
+            onChange={(e) => setNewPasswordConfirm(e.target.value)}
+            autoComplete="new-password"
+            disabled={busy}
+          />
+          <button
+            type="button"
+            className="btn btn-primary"
+            disabled={
+              busy ||
+              !currentPassword.trim() ||
+              !newPassword.trim() ||
+              !newPasswordConfirm.trim()
+            }
+            onClick={() => void handleChangePassword()}
+          >
+            パスワードを変更する
           </button>
         </div>
       </section>
