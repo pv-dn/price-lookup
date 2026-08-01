@@ -186,12 +186,28 @@ export async function readPriceSheetExcelFile(
   return parsePriceSheetExcel(rows, categories);
 }
 
-function pickBasePriceSheetName(sheetNames: string[]): string | undefined {
-  const exact = sheetNames.find((n) => n.trim() === "基本");
-  if (exact) return exact;
-  const fuzzy = sheetNames.find((n) => /基本/.test(n));
-  if (fuzzy) return fuzzy;
-  return sheetNames[0];
+function orderedBasePriceSheetNames(sheetNames: string[]): string[] {
+  const exact = sheetNames.filter((n) => n.trim() === "基本");
+  const fuzzy = sheetNames.filter(
+    (n) => n.trim() !== "基本" && /基本/.test(n),
+  );
+  const rest = sheetNames.filter((n) => !/基本/.test(n));
+  return [...exact, ...fuzzy, ...rest];
+}
+
+function sheetRows(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  workbook: { Sheets: Record<string, any> },
+  sheetName: string,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  XLSX: any,
+): unknown[][] {
+  const sheet = workbook.Sheets[sheetName];
+  return XLSX.utils.sheet_to_json(sheet, {
+    header: 1,
+    defval: "",
+    raw: true,
+  }) as unknown[][];
 }
 
 export async function readBasePriceSheetExcelFile(
@@ -200,16 +216,26 @@ export async function readBasePriceSheetExcelFile(
 ): Promise<{ items: ParsedPriceSheetItem[]; sheetName: string }> {
   const XLSX = await import("xlsx");
   const workbook = XLSX.read(file, { type: "array", cellDates: true });
-  const sheetName = pickBasePriceSheetName(workbook.SheetNames);
-  if (!sheetName) throw new Error("シートが見つかりません");
-  const sheet = workbook.Sheets[sheetName];
-  const rows = XLSX.utils.sheet_to_json(sheet, {
-    header: 1,
-    defval: "",
-    raw: true,
-  }) as unknown[][];
-  return {
-    ...parseBasePriceSheetExcel(rows, categories),
-    sheetName,
-  };
+  if (workbook.SheetNames.length === 0) {
+    throw new Error("シートが見つかりません");
+  }
+
+  const candidates = orderedBasePriceSheetNames(workbook.SheetNames);
+  const errors: string[] = [];
+
+  for (const sheetName of candidates) {
+    try {
+      const rows = sheetRows(workbook, sheetName, XLSX);
+      const parsed = parseBasePriceSheetExcel(rows, categories);
+      return { ...parsed, sheetName };
+    } catch (e) {
+      errors.push(
+        `「${sheetName}」: ${e instanceof Error ? e.message : String(e)}`,
+      );
+    }
+  }
+
+  throw new Error(
+    `基本価格表として取り込めるシートがありません。\n（「基本」シートがあるか確認してください）\n${errors.slice(0, 3).join("\n")}`,
+  );
 }
