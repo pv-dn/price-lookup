@@ -9,11 +9,11 @@ export function sortProducts(
   productOrder?: string[],
 ): Product[] {
   const list = [...products];
+  const orderMap = new Map(
+    (productOrder ?? []).map((code, index) => [code, index]),
+  );
 
   if (sortBy === "manual") {
-    const orderMap = new Map(
-      (productOrder ?? []).map((code, index) => [code, index]),
-    );
     list.sort((a, b) => {
       const ia = orderMap.get(a.code) ?? Number.MAX_SAFE_INTEGER;
       const ib = orderMap.get(b.code) ?? Number.MAX_SAFE_INTEGER;
@@ -30,6 +30,10 @@ export function sortProducts(
       const ca = catOrder.get(a.category) ?? 9999;
       const cb = catOrder.get(b.category) ?? 9999;
       if (ca !== cb) return ca - cb;
+      // ジャンル内は手動順を優先（未登録は品名順）
+      const ia = orderMap.get(a.code) ?? Number.MAX_SAFE_INTEGER;
+      const ib = orderMap.get(b.code) ?? Number.MAX_SAFE_INTEGER;
+      if (ia !== ib) return ia - ib;
       return a.name.localeCompare(b.name, "ja");
     }
     if (sortBy === "name") {

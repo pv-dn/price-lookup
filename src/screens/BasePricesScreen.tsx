@@ -105,7 +105,10 @@ export function BasePricesScreen({
   }, [filtered, priceEditMode, draft, categories, sortBy, data.productOrder, data.basePrices.length]);
 
   const handleSortChange = (next: ProductSortBy) => {
-    if (next === "manual" && !data.productOrder?.length) {
+    if (
+      (next === "manual" || next === "genre") &&
+      !data.productOrder?.length
+    ) {
       const current = sortProducts(filtered, categories, sortBy, data.productOrder);
       onUpdate(initProductOrderFromProducts(data, current));
     }
@@ -117,9 +120,20 @@ export function BasePricesScreen({
 
   const handleReorderInGroup = useCallback(
     (_groupLabel: string, codes: string[], from: number, to: number) => {
-      onUpdate(reorderDisplayedProducts(data, codes, from, to));
+      let base = data;
+      if (!base.productOrder?.length) {
+        base = initProductOrderFromProducts(
+          data,
+          sortProducts(filtered, categories, sortBy, data.productOrder),
+        );
+      }
+      onUpdate(reorderDisplayedProducts(base, codes, from, to));
+      // ジャンル表示のまま並替できるように、手動へ強制切替しない
+      if (sortBy !== "manual" && sortBy !== "genre") {
+        setSortBy("genre");
+      }
     },
-    [data, onUpdate],
+    [data, onUpdate, filtered, categories, sortBy],
   );
 
   const { getWidth: getColumnWidth, startResize: startColumnResize } =
@@ -128,8 +142,9 @@ export function BasePricesScreen({
   const { hidden, isVisible, toggle, showAll, allVisible } = useGenreVisibility(categories);
 
   const sheetLayout = viewMode === "sheet";
-  // 閲覧・編集どちらでも「手動」ならドラッグ並替可
-  const canReorderRows = sheetLayout && sortBy === "manual";
+  // ジャンル／手動の一覧表ならドラッグ並替可（閲覧・編集どちらでも）
+  const canReorderRows =
+    sheetLayout && (sortBy === "manual" || sortBy === "genre");
   const canResizeColumns = sheetLayout && !priceEditMode;
 
   const handleSave = () => {
@@ -381,9 +396,9 @@ export function BasePricesScreen({
           >
             手動
           </button>
-          {sortBy === "manual" && (
+          {canReorderRows && (
             <span className="base-sort-hint">
-              一覧表の行をドラッグして並替（同じジャンル内）
+              一覧表の行をドラッグして並替（同じジャンル内・閲覧でも維持）
             </span>
           )}
         </div>
